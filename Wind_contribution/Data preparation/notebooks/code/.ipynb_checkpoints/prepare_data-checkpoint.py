@@ -5,9 +5,8 @@ Author: Iris Keizer
 https://github.com/iris-keizer/Thesis-KNMI
 
 These functions are used in the notebooks:
-AnnualAverages.ipynb
-Nearest_point.ipynb
-
+prepare_obs.ipynb
+prepare_cmip6.ipynb
 
 
 """
@@ -15,33 +14,17 @@ Nearest_point.ipynb
 
 # Import necessary packages
 import xarray as xr # used for analysing netcdf format data
-from xarray import DataArray
-import netCDF4
 import numpy as np
-import matplotlib
-from scipy.signal import detrend
-from scipy.stats import linregress
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 import pandas as pd
-import regionmask
-from sklearn.linear_model import LinearRegression as linr
-from sklearn.metrics import mean_squared_error
-from sklearn import linear_model
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import cross_validate
-from sklearn.metrics import mean_squared_error
-from sklearn.linear_model import Lasso, LassoCV, RidgeCV
-from sklearn.model_selection import TimeSeriesSplit
-import seaborn as sns
-import copy
-from statistics import mean
+import glob as gb
+import copy as cp
+
+"""
+Practical functions
+--------------------------
 
 
-# Import functions from other files
-#from Timmerman_regions import timmerman_regions
+"""
 
 
 # Function to save data as NETCDF4 file
@@ -66,7 +49,7 @@ def save_csv_data(data, folder, variable, name):
 
 
 """
-CALCULATE ANNUAL AVERAGES
+PREPARE OBSERVATIONAL DATA
 --------------------------
 
 Functions to obtain annual averages of the data and make changes to the datasets such that they can
@@ -124,7 +107,7 @@ def prep_tg_data_obs():
 
     tg_data_df = tg_data_df.interpolate(method='slinear')
     tg_data_df['Average'] = tg_data_df.mean(axis=1) # Add column containing the average of the stations 
-    tg_data_df = tg_data_df*0.001 # cm -> m
+    tg_data_df = tg_data_df*0.1 # mm -> cm
     
     # Data before 1890 is incorrect
     tg_data_df = tg_data_df[tg_data_df.index>=1890] 
@@ -180,13 +163,13 @@ def prep_wind_data_obs(data_type = 'era5'):
         dataset = dataset.drop('expver')
         dataset = dataset.sel(expver=0,drop=True)
 
-
-        # Sort longitudes increasing
-        dataset = dataset.sortby('lon')
-
         
         # Change coordinate and variable names
         dataset = dataset.rename({'longitude': 'lon','latitude': 'lat', 'u10' : 'u', 'v10' : 'v'})
+
+
+        # Sort longitudes increasing
+        dataset = dataset.sortby('lon')
 
 
         
@@ -204,8 +187,7 @@ def prep_wind_data_obs(data_type = 'era5'):
 
 
         # Add the two datasets
-        dataset = u
-        dataset = dataset.assign(vwnd = v.vwnd)
+        dataset = u.assign(vwnd = v.vwnd)
 
 
         # Shift longitudes from 0 - 360 to -180 to 180
@@ -231,11 +213,10 @@ def prep_wind_data_obs(data_type = 'era5'):
     
     
     # Select smaller area of data 
-    dataset = dataset.where((dataset.lat > 40) & (dataset.lat < 90), drop=True)
-    dataset = dataset.where((dataset.lon > -40) & (dataset.lon < 30), drop=True)             
+    dataset = dataset.where((dataset.lat > 40) & (dataset.lat < 90) & (dataset.lon > -40) & (dataset.lon < 30), drop=True)
 
 
-    # Obtain stress for monthly averaged data
+    # Obtain stress for monthly averaged data (wind is squared, sign is retained)
     dataset = dataset.assign(u2 = dataset.u**2*np.sign(dataset.u))
     dataset = dataset.assign(v2 = dataset.v**2*np.sign(dataset.v))  
 
@@ -319,8 +300,7 @@ def prep_pres_data_obs(data_type = 'era5'):
         
         
         # Select smaller area of data 
-        dataset = dataset.where((dataset.lat >= 0) & (dataset.lat <= 90), drop=True)
-        dataset = dataset.where((dataset.lon >= -90) & (dataset.lon <= 90), drop=True)             
+        dataset = dataset.where((dataset.lat >= 0) & (dataset.lat <= 90) & (dataset.lon >= -90) & (dataset.lon <= 90), drop=True)
 
 
         
@@ -345,236 +325,209 @@ def prep_pres_data_obs(data_type = 'era5'):
     
     
     
+
     
-        
+    
+
+    
+    
+    
+    
+    
 """
-IMPORTING DATA
---------------
+PREPARE CMIP6 DATA
+--------------------------
 
-Importing the annual data and use it for (regression) analysis
+Functions to import the CMIP6 data and put all models in a dataset.
+Also other necessary changes are made to get the data ready for the analysis
+
+
+
 """
 
 
-# Function that imports observational data
 
-def import_obs_slh_data():
+
+def prep_slh_data_cmip6(data_type = 'historical'):
+    """
+    Function to prepare the cmip6 sea level height data for the analysis
     
-    # Define paths to data
-    path_tg = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/SLH/rlr_annual'
-    path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/SLH/rlr_annual/filelist.txt'
+    For data_type choose ['historical', 'piControl', 'ssp119', 'ssp126', 'ssp245', 'ssp370', 'ssp585']
     
-    # Import tide gauge sea level data
-    loc_num = [20, 22, 23, 24, 25, 32]
-    col_names = ['id', 'lat', 'lon', 'name', 'coastline_code', 'station_code', 'quality']
-    filelist_df = pd.read_csv(path_locations, sep=';', header=None, names=col_names)
-    filelist_df = filelist_df.set_index('id')
-    filelist_df = filelist_df.loc[loc_num, :]
-    names_col = ('time', 'height', 'interpolated', 'flags')
-    station_names = []
-
-    for i in range(len(loc_num)):
-            tg_data = pd.read_csv(path_tg + '/data/' + str(loc_num[i]) + 
-                                  '.rlrdata', sep=';', header=None, names=names_col)
-            tg_data = tg_data.set_index('time')
-            tg_data.height = tg_data.height.where(~np.isclose(tg_data.height,-99999))
-            tg_data.height = tg_data.height - tg_data.height.mean()
-
-            if i==0:
-                tg_data_df = pd.DataFrame(data=dict(time=tg_data.index, col_name=tg_data.height))
-                tg_data_df = tg_data_df.set_index('time')
-                tg_data_df.columns  = [str(loc_num[i])] 
-            else:
-                tg_data_df[str(loc_num[i])] = tg_data.height
-            station_names.append(filelist_df['name'].loc[loc_num[i]].strip())
-
-    tg_data_df = tg_data_df.rename(columns={"20": station_names[0], 
-                              "22": station_names[1], "23": station_names[2],
-                              "24": station_names[3], "25": station_names[4],
-                              "32": station_names[5]})
-
-    tg_data_df = tg_data_df.interpolate(method='slinear')
-    tg_data_df['Average'] = tg_data_df.mean(axis=1) # Add column containing the average of the stations 
-    tg_data_df = tg_data_df*0.001 # cm -> m
+    """
     
-    # Data before 1890 is incorrect
-    tg_data_df = tg_data_df[tg_data_df.index>=1890] 
-    
-    # Select tide gauge data from period_begin onwards and till period_end
-    tg_data_df = tg_data_df[tg_data_df.index>=period_begin]
-    tg_data_df = tg_data_df[tg_data_df.index<=period_end]
-    
-    return tg_data_df
-
-
-
-
-def import_obs_wind_data(period_begin=1900, period_end=2000, model = 'NearestPoint', data = 'ERA5'):
-    
-    # Define paths to data
-    path_wind_ERA5 = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/annual_dataset.nc' 
-    path_wind_20cr = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/annual_dataset_20cr.nc'
-    path_pres_ERA5 = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/pres_ERA5_annual.nc'
-    path_pres_20cr = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/pres_annual.nc'
-    path_tg = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual'
-    path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual/filelist.txt'
+    # Define path to cmip6 data
+    path = '/Volumes/Iris 300 GB/CMIP6'
     
     
     
     
-    
-    # Import tide gauge sea level data
-    loc_num = [20, 22, 23, 24, 25, 32]
-    col_names = ['id', 'lat', 'lon', 'name', 'coastline_code', 'station_code', 'quality']
-    filelist_df = pd.read_csv(path_locations, sep=';', header=None, names=col_names)
-    filelist_df = filelist_df.set_index('id')
-    filelist_df = filelist_df.loc[loc_num, :]
-    names_col = ('time', 'height', 'interpolated', 'flags')
-    station_names = []
-
-    for i in range(len(loc_num)):
-            tg_data = pd.read_csv(path_tg + '/data/' + str(loc_num[i]) + 
-                                  '.rlrdata', sep=';', header=None, names=names_col)
-            tg_data = tg_data.set_index('time')
-            tg_data.height = tg_data.height.where(~np.isclose(tg_data.height,-99999))
-            tg_data.height = tg_data.height - tg_data.height.mean()
-
-            if i==0:
-                tg_data_df = pd.DataFrame(data=dict(time=tg_data.index, col_name=tg_data.height))
-                tg_data_df = tg_data_df.set_index('time')
-                tg_data_df.columns  = [str(loc_num[i])] 
-            else:
-                tg_data_df[str(loc_num[i])] = tg_data.height
-            station_names.append(filelist_df['name'].loc[loc_num[i]].strip())
-
-    tg_data_df = tg_data_df.rename(columns={"20": station_names[0], 
-                              "22": station_names[1], "23": station_names[2],
-                              "24": station_names[3], "25": station_names[4],
-                              "32": station_names[5]})
-
-    tg_data_df = tg_data_df.interpolate(method='slinear')
-    tg_data_df['Average'] = tg_data_df.mean(axis=1) # Add column containing the average of the stations 
-    tg_data_df = tg_data_df*0.001 # mm -> m
-    
-    # Data before 1890 is incorrect
-    tg_data_df = tg_data_df[tg_data_df.index>=1890] 
-    
-    # Select tide gauge data from period_begin onwards and till period_end
-    tg_data_df = tg_data_df[tg_data_df.index>=period_begin]
-    tg_data_df = tg_data_df[tg_data_df.index<=period_end]
-    
-    
-    
-    
-    
-    # Import wind or pressure data (depending on model)
-    if model == 'NearestPoint' or model ==  'Timmerman':
-        if data == 'ERA5':
-            dataset_annual = xr.open_dataset(path_wind) 
-            dataset_annual = dataset_annual.rename({'longitude': 'lon','latitude': 'lat'})
-
-        elif data == '20cr':
-            dataset_annual = xr.open_dataset(path_wind_20cr) 
-            
-        # Select data from period_begin onwards and till period_end
-        dataset_annual = dataset_annual.where(dataset_annual.year>=period_begin, drop=True)
-        dataset_annual = dataset_annual.where(dataset_annual.year<=period_end, drop=True)
-            
-
-
-
-    
-        if model == 'NearestPoint':
-
-            # Create wind data array per tide gauge station 
-            df = [] # List containing the created dataframes
-
-            for idx, i in enumerate(loc_num):
-                df.append(pd.DataFrame(data={'time': dataset_annual.u2.year, 
-                                                 'u2' : dataset_annual.u2.sel(lon = filelist_df['lon'].loc[i], 
-                                                                              lat = filelist_df['lat'].loc[i], 
-                                                                              method = 'nearest').to_series().dropna(), 
-                                                 'v2' : dataset_annual.v2.sel(lon = filelist_df['lon'].loc[i], 
-                                                                              lat = filelist_df['lat'].loc[i], 
-                                                                              method = 'nearest').to_series().dropna()}))
-                df[-1] = df[-1].set_index('time')
-
-            wind_df = pd.concat([df[0],  df[1],  df[2],  df[3],  df[4],  df[5]], axis=1, keys = station_names)
-
-
-        elif model ==  'Timmerman':
-            # Create wind data array per region
-            Timmerman_regions = timmerman_regions()
-            mask = Timmerman_regions.mask(dataset_annual)
-            regional_data = []  # List containing the dataset per region
-
-            for i in range(1,7):
-                regional_data.append(dataset_annual.where(mask == i))
-
-            # Calculate regional averages
-            df = [] # List containing the created dataframes
-
-            for ds in regional_data:
-                ds_avg = ds.mean('lon').mean('lat')
-                df.append(pd.DataFrame(data={'time': ds_avg.year, 'u2' : ds_avg.u2, 'v2' : ds_avg.v2}))
-                df[-1] = df[-1].set_index('time')
-
-            wind_df = pd.concat([df[0],  df[1],  df[2],  df[3],  df[4],  df[5]], axis=1, keys = region_names)
-    
-    
+    if data_type == 'piControl':
         
         
         
-        return (wind_df, dataset_annual, tg_data_df)
+        # Create empty list to save files
+        piControl = []
+
+        # Loop over all files in directory
+        for file in gb.glob(f'{path}/cmip6_zos_piControl/*'):
+            
+            
+            # Open data file
+            data = xr.open_dataset(file)
     
-   
-
     
-    # Import sea level pressure data
-    elif model == 'Dangendorf':
-
-        if data == 'ERA5':
-            pres = xr.open_dataset(path_pres_ERA5) 
-            pres = pres.rename({'longitude': 'lon','latitude': 'lat'})
+            # Select area
+            data = data.where((data.lat > 45) & (data.lat < 60) & (data.lon > 0) & (data.lon < 10), drop=True)
+    
             
-            # Select data from period_begin onwards and till period_end
-            pres = pres.where(pres.year>=period_begin, drop=True)
-            pres = pres.where(pres.year<=period_end, drop=True)
+            # Add file to list
+            piControl.append(data)
             
-            pres = pres.rename({'msl':'pres'})
-            pres = pres.drop('expver')
-        elif data == '20cr':
-            pres = xr.open_dataset(path_pres_20cr) 
-            
-            # Select data from period_begin onwards and till period_end
-            pres = pres.where(pres.year>=period_begin, drop=True)
-            pres = pres.where(pres.year<=period_end, drop=True)
-            
-            pres = pres.rename({'prmsl':'pres'})
-
+        # Merge all files to one dataset 
+        dataset_annual = xr.merge(piControl, combine_attrs='override')
         
-        if pres.year.values[0]>period_begin:
-            print("The tide gauge data series begins later than the begin year that was given!")
-        if pres.year.values[-1]<period_end:
-            print("The tide gauge data series ends earlier than the final year that was given!")
-
-        return (pres, tg_data_df)
-
+    
+    
+    
+    else: 
+        
+        
+        # Open data files as dataset
+        dataset_annual = xr.open_mfdataset(f'{path}/cmip6_zos_{data_type}/cmip6_zos_{data_type}_*.nc')
+    
+    
+        # Select area
+        dataset_annual = dataset_annual.where((dataset_annual.lat > 45) & (dataset_annual.lat < 60) & (dataset_annual.lon > 0) & (dataset_annual.lon < 10), drop=True)
+    
+    
+    # Change coordinate and variable names
+    dataset_annual = dataset_annual.rename({"CorrectedReggrided_zos":"zos"})
+    
+    
+    # Save annual data as netcdf4           
+    save_nc_data(dataset_annual, 'cmip6', 'SLH', f'slh_annual_{data_type}')    
     
     
     
     
-# Function that imports cmip6 data
+    return dataset_annual
 
 
 
 
 
 
+def prep_wind_data_cmip6(data_type = 'historical'):
+    """
+    Function to prepare the cmip6 wind data for the analysis
+    
+    For data_type choose ['historical', 'piControl', 'ssp119', 'ssp126', 'ssp245', 'ssp370', 'ssp585']
+    
+    """
+    
+    
+    # Define path to cmip6 data
+    path = '/Volumes/Iris 300 GB/CMIP6'
+    
+    
+    
+    
+    if data_type == 'piControl':
+        
+        
+        # ZONAL
+        
+        # Create empty list to save files 
+        piControl_u = []
 
+        # Loop over all files in directory
+        for file in gb.glob(f'{path}/cmip6_uas_piControl/*'):
+            
+            print(file)
+            # Open data file
+            data_u = xr.open_dataset(file) # unit: m/s
+    
+    
+            # Select area
+            data_u = data_u.where((data_u.lat > 40) & (data_u.lat < 90) & (data_u.lon > -40) & (data_u.lon < 30), drop=True)
+    
 
+            # Add file to list
+            piControl_u.append(data_u)
+            
+            
+        # Merge all files to one dataset 
+        dataset_u = xr.merge(piControl_u, combine_attrs='override')
+        
+        print('merged')
+        # MERIDIONAL
+        
+        # Create empty list to save files 
+        piControl_v = []
 
-
-
+        # Loop over all files in directory
+        for file in gb.glob(f'{path}/cmip6_vas_piControl/*'):
+            
+            print(file)
+            # Open data file
+            data_v = xr.open_dataset(file) # unit: m/s
+    
+    
+            # Select area
+            data_v = data_v.where((data_v.lat > 40) & (data_v.lat < 90) & (data_v.lon > -40) & (data_v.lon < 30), drop=True)
+    
+            
+            # Add file to list
+            piControl_v.append(data_v)
+            
+            
+        # Merge all files to one dataset 
+        dataset_v = xr.merge(piControl_v, combine_attrs='override')
+    
+        print('merged')
+    
+    
+    
+    else: 
+        
+        
+        # Open data files as dataset
+        dataset_u = xr.open_mfdataset(f'{path}/cmip6_uas_{data_type}/cmip6_uas_{data_type}_*.nc')
+        dataset_v = xr.open_mfdataset(f'{path}/cmip6_vas_{data_type}/cmip6_vas_{data_type}_*.nc')
+        
+        
+        # Select area
+        dataset_u = dataset_u.where((dataset_u.lat > 40) & (dataset_u.lat < 90) & (dataset_u.lon > -40) & (dataset_u.lon < 30), drop=True)
+        dataset_v = dataset_v.where((dataset_v.lat > 40) & (dataset_v.lat < 90) & (dataset_v.lon > -40) & (dataset_v.lon < 30), drop=True)
+    
+    
+    # Change coordinate and variable names
+    dataset_u = dataset_u.rename({"CorrectedReggrided_uas":"uas"})
+    dataset_v = dataset_v.rename({"CorrectedReggrided_vas":"vas"})
+    
+    
+    # Add the two datasets
+    dataset_annual = dataset_u.assign(vas = dataset_v.vas)
+    
+    print('datasets added')
+    # Obtain wind stress (wind is squared, sign is retained)
+    dataset_annual = dataset_annual.assign(u2 = dataset_annual.uas**2*np.sign(dataset_annual.uas))
+    dataset_annual = dataset_annual.assign(v2 = dataset_annual.vas**2*np.sign(dataset_annual.vas))  
+    
+    
+    # Make another dataset without velocity variables
+    dataset_vel = cp.deepcopy(dataset_annual)
+    dataset_annual = dataset_annual.drop(['uas', 'vas'])
+    
+    
+    # Save annual data as netcdf4           
+    save_nc_data(dataset_annual, 'cmip6', 'Wind', f'wind_annual_{data_type}')    
+    
+    
+    
+    
+    return dataset_annual, dataset_vel
 
 
 
