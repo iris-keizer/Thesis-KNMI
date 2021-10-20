@@ -1,3 +1,17 @@
+"""
+File containing the Python functions to import the correct data used for the regression between wind stress and sea level height along the Dutch coast. 
+Depending on the type of data, used wind model and whether observational or cmip6 data is used, the functions 
+
+Author: Iris Keizer
+https://github.com/iris-keizer/Thesis-KNMI
+
+These functions are used in the notebooks:
+
+
+
+"""
+
+
 
 
 

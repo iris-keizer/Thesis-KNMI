@@ -13,32 +13,67 @@ prepare_cmip6.ipynb
 
 
 # Import necessary packages
-import xarray as xr # used for analysing netcdf format data
+import xarray as xr 
 import numpy as np
 import pandas as pd
 import glob as gb
 import copy as cp
+import os
+
+
 
 """
 Practical functions
---------------------------
+-------------------
 
 
 """
 
 
-# Function to save data as NETCDF4 file
+def station_names(): 
+    """
+    Function to obtain tide gauge station names as list
+    
+    """
+    return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
+
+def station_coords(): 
+    """
+    Function to obtain the coordinates of the tide gauge stations as a dataframe
+    
+    """
+    
+    
+    # Necessary declarations to obtain tide gauge station coordinates
+    path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual/filelist.txt'
+    loc_num = [20, 22, 23, 24, 25, 32]
+    col_names = ['id', 'lat', 'lon', 'name', 'coastline_code', 'station_code', 'quality']
+    
+    # Create dataframe
+    df = pd.read_csv(path_locations, sep=';', header=None, names=col_names)
+    df = df.set_index('id')
+    df = df.loc[loc_num, :]
+    df['name'] = station_names()[:-1]
+    df = df.set_index('name')
+    df = df.drop(['coastline_code', 'station_code', 'quality'], axis=1)
+    
+    return df
+
+
 def save_nc_data(data, folder, variable, name): 
     """
+    Function to save data as NETCDF4 file
+    
     For folder choose ['observations', 'cmip6'], for variable choose ['Wind', 'SLH', 'Pressure', 'SST']
     
     """
-    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc")
+    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc", mode='w')
     
-
-# Function to save data as .csv file
+    
 def save_csv_data(data, folder, variable, name): 
     """
+    Function to save data as .csv file
+    
     For folder choose ['observations', 'cmip6'], for variable choose ['Wind', 'SLH', 'Pressure', 'SST']
     
     """
@@ -82,8 +117,8 @@ def prep_tg_data_obs():
     filelist_df = filelist_df.set_index('id')
     filelist_df = filelist_df.loc[loc_num, :]
     names_col = ('time', 'height', 'interpolated', 'flags')
-    station_names = []
-
+    station_names = get_station_names()
+    
     for i in range(len(loc_num)):
             tg_data = pd.read_csv(path_tg + '/data/' + str(loc_num[i]) + 
                                   '.rlrdata', sep=';', header=None, names=names_col)
@@ -98,7 +133,7 @@ def prep_tg_data_obs():
                 tg_data_df.columns  = [str(loc_num[i])] 
             else:
                 tg_data_df[str(loc_num[i])] = tg_data.height
-            station_names.append(filelist_df['name'].loc[loc_num[i]].strip())
+            
 
     tg_data_df = tg_data_df.rename(columns={"20": station_names[0], 
                               "22": station_names[1], "23": station_names[2],
@@ -357,7 +392,7 @@ def prep_slh_data_cmip6(data_type = 'historical'):
     """
     
     # Define path to cmip6 data
-    path = '/Volumes/Iris 300 GB/CMIP6'
+    path = f'/Volumes/Iris 300 GB/CMIP6/cmip6_zos_{data_type}'
     
     
     
@@ -370,7 +405,7 @@ def prep_slh_data_cmip6(data_type = 'historical'):
         piControl = []
 
         # Loop over all files in directory
-        for file in gb.glob(f'{path}/cmip6_zos_piControl/*'):
+        for file in gb.glob(f'{path}/*'):
             
             
             # Open data file
@@ -379,6 +414,11 @@ def prep_slh_data_cmip6(data_type = 'historical'):
     
             # Select area
             data = data.where((data.lat > 45) & (data.lat < 60) & (data.lon > 0) & (data.lon < 10), drop=True)
+    
+    
+            # Shift time for each model to start at 0 since the values are arbitrary
+            time_lst = data.time.values - data.time.values[0]
+            data = data.assign_coords(time = time_lst)
     
             
             # Add file to list
@@ -394,15 +434,49 @@ def prep_slh_data_cmip6(data_type = 'historical'):
         
         
         # Open data files as dataset
-        dataset_annual = xr.open_mfdataset(f'{path}/cmip6_zos_{data_type}/cmip6_zos_{data_type}_*.nc')
+        dataset_annual = xr.open_mfdataset(f'{path}/cmip6_zos_{data_type}_*.nc')
     
     
         # Select area
         dataset_annual = dataset_annual.where((dataset_annual.lat > 45) & (dataset_annual.lat < 60) & (dataset_annual.lon > 0) & (dataset_annual.lon < 10), drop=True)
+        
+        
+        # Change time to integer
+        dataset_annual.coords['time'] = dataset_annual.coords['time'].astype(int)
     
     
     # Change coordinate and variable names
     dataset_annual = dataset_annual.rename({"CorrectedReggrided_zos":"zos"})
+    
+    
+    # Obtain coordinates of the tide gauge stations
+    coord_df = station_coords()
+    coord_df['lon'][1] = 3.5 # Make sure HvH doesn't get nan values
+
+    # Create list of wind dataarrays
+    lst = [] 
+
+    # Loop over the tide gauge stations
+    for index, row in coord_df.iterrows():
+        lst.append(dataset_annual.zos.sel(lon = row.lon, lat = row.lat, method = 'nearest'))
+        lst[-1] = lst[-1].drop(['lat', 'lon'])
+    
+    
+    # Get station names as a list
+    stations = station_names()
+    
+    
+    # Create a dataarray
+    dataset_annual = xr.concat(lst, stations[:-1]).rename({'concat_dim':'station'})
+    
+    
+    # Calculate average station
+    average = dataset_annual.mean('station')
+    average = average.assign_coords({'station':'Average'})
+    
+    
+    # Concat to original dataarray
+    dataset_annual = xr.concat([dataset_annual, average], dim='station')
     
     
     # Save annual data as netcdf4           
@@ -418,6 +492,62 @@ def prep_slh_data_cmip6(data_type = 'historical'):
 
 
 
+def prep_wind_picontrol(data_type = 'zonal'):
+    """
+    Function to do some preparation on picontrol data before storing all as one dataset
+    
+    For data_type choose ['zonal', 'meridional']
+    
+    """
+    if data_type == 'zonal':
+        var = 'uas'
+    elif data_type == 'meridional':
+        var= 'vas'
+        
+    
+    # Define path to cmip6 data
+    path = '/Volumes/Iris 300 GB/CMIP6'
+    
+    
+    # Loop over all files in directory
+    for file in gb.glob(f'{path}/cmip6_{var}_piControl/*'):
+        
+
+        # Open data file
+        data = xr.open_dataset(file) # unit: m/s
+
+
+        # Select area
+        data = data.where((data.lat > 40) & (data.lat < 70) & (data.lon > -30) & (data.lon < 30), drop=True)
+
+
+        # Shift time for each model to start at 0 since the values are arbitrary
+        time_lst = data.time.values - data.time.values[0]
+        data = data.assign_coords(time = time_lst)
+
+
+        # Change coordinate and variable names
+        data = data.rename({f"CorrectedReggrided_{var}" : f"{var}"})
+        
+        
+        # Obtain wind stress (wind is squared, sign is retained)
+        if data_type == 'zonal':
+            data = data.assign(u2 = data.uas**2*np.sign(data.uas))
+        elif data_type == 'meridional':
+            data = data.assign(v2 = data.vas**2*np.sign(data.vas))
+
+        data_vel = data
+        # Remove velocity variables
+        data = data.drop(var)
+
+
+        # Save data as netcdf4     
+        name = os.path.basename(file)
+        data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Wind/piControl/{data_type}/{name}", mode='w')
+
+    
+    
+    
 def prep_wind_data_cmip6(data_type = 'historical'):
     """
     Function to prepare the cmip6 wind data for the analysis
@@ -437,56 +567,31 @@ def prep_wind_data_cmip6(data_type = 'historical'):
         
         
         # ZONAL
+        prep_wind_picontrol()
         
-        # Create empty list to save files 
-        piControl_u = []
-
-        # Loop over all files in directory
-        for file in gb.glob(f'{path}/cmip6_uas_piControl/*'):
-            
-            print(file)
-            # Open data file
-            data_u = xr.open_dataset(file) # unit: m/s
-    
-    
-            # Select area
-            data_u = data_u.where((data_u.lat > 40) & (data_u.lat < 90) & (data_u.lon > -40) & (data_u.lon < 30), drop=True)
-    
-
-            # Add file to list
-            piControl_u.append(data_u)
-            
-            
-        # Merge all files to one dataset 
-        dataset_u = xr.merge(piControl_u, combine_attrs='override')
         
-        print('merged')
+        path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Wind/piControl/zonal'   
+
+
+        # Open data files as dataset
+        dataset_u = xr.open_mfdataset(f'{path}/cmip6_uas_piControl_*.nc')
+
+
+        
+        
         # MERIDIONAL
+        prep_wind_picontrol(data_type='meridional')
         
-        # Create empty list to save files 
-        piControl_v = []
+        
+        path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Wind/piControl/meridional'   
 
-        # Loop over all files in directory
-        for file in gb.glob(f'{path}/cmip6_vas_piControl/*'):
-            
-            print(file)
-            # Open data file
-            data_v = xr.open_dataset(file) # unit: m/s
+
+        # Open data files as dataset
+        dataset_v = xr.open_mfdataset(f'{path}/cmip6_vas_piControl_*.nc')
     
-    
-            # Select area
-            data_v = data_v.where((data_v.lat > 40) & (data_v.lat < 90) & (data_v.lon > -40) & (data_v.lon < 30), drop=True)
-    
-            
-            # Add file to list
-            piControl_v.append(data_v)
-            
-            
-        # Merge all files to one dataset 
-        dataset_v = xr.merge(piControl_v, combine_attrs='override')
-    
-        print('merged')
-    
+        
+        # Add the two datasets
+        dataset_annual = dataset_u.assign(v2 = dataset_v.v2)
     
     
     else: 
@@ -502,23 +607,26 @@ def prep_wind_data_cmip6(data_type = 'historical'):
         dataset_v = dataset_v.where((dataset_v.lat > 40) & (dataset_v.lat < 90) & (dataset_v.lon > -40) & (dataset_v.lon < 30), drop=True)
     
     
-    # Change coordinate and variable names
-    dataset_u = dataset_u.rename({"CorrectedReggrided_uas":"uas"})
-    dataset_v = dataset_v.rename({"CorrectedReggrided_vas":"vas"})
+        # Change coordinate and variable names
+        dataset_u = dataset_u.rename({"CorrectedReggrided_uas":"uas"})
+        dataset_v = dataset_v.rename({"CorrectedReggrided_vas":"vas"})
     
-    
-    # Add the two datasets
-    dataset_annual = dataset_u.assign(vas = dataset_v.vas)
-    
-    print('datasets added')
-    # Obtain wind stress (wind is squared, sign is retained)
-    dataset_annual = dataset_annual.assign(u2 = dataset_annual.uas**2*np.sign(dataset_annual.uas))
-    dataset_annual = dataset_annual.assign(v2 = dataset_annual.vas**2*np.sign(dataset_annual.vas))  
-    
-    
-    # Make another dataset without velocity variables
-    dataset_vel = cp.deepcopy(dataset_annual)
-    dataset_annual = dataset_annual.drop(['uas', 'vas'])
+
+        # Add the two datasets
+        dataset_annual = dataset_u.assign(vas = dataset_v.vas)
+
+
+        # Obtain wind stress (wind is squared, sign is retained)
+        dataset_annual = dataset_annual.assign(u2 = dataset_annual.uas**2*np.sign(dataset_annual.uas))
+        dataset_annual = dataset_annual.assign(v2 = dataset_annual.vas**2*np.sign(dataset_annual.vas))  
+
+
+        # Make a dataset without velocity variables
+        dataset_annual = dataset_annual.drop(['uas', 'vas'])
+        
+        
+        # Change time to integer
+        dataset_annual.coords['time'] = dataset_annual.coords['time'].astype(int)
     
     
     # Save annual data as netcdf4           
@@ -527,7 +635,7 @@ def prep_wind_data_cmip6(data_type = 'historical'):
     
     
     
-    return dataset_annual, dataset_vel
+    return dataset_annual
 
 
 
@@ -536,6 +644,81 @@ def prep_wind_data_cmip6(data_type = 'historical'):
 
 
 
+    
+def prep_pres_data_cmip6(data_type = 'historical'):
+    """
+    Function to prepare the cmip6 pressure data for the analysis
+    
+    For data_type choose ['historical', 'piControl', 'ssp119', 'ssp126', 'ssp245', 'ssp370', 'ssp585']
+    
+    """
+    
+    
+    # Define path to cmip6 data
+    path = f'/Volumes/Iris 300 GB/CMIP6/cmip6_ps_{data_type}/'
+    
+    
+    
+    
+    if data_type == 'piControl':
+        
+        
+        
+        # Create empty list to save files
+        piControl = []
 
+        # Loop over all files in directory
+        for file in gb.glob(f'{path}/*'):
+            
+            
+            # Open data file
+            data = xr.open_dataset(file)
+    
+    
+            # Select area
+            data = data.where((data.lat > 0) & (data.lat < 90) & (data.lon > -90) & (data.lon < 90), drop=True)
+            
+            
+            # Shift time for each model to start at 0 since the values are arbitrary
+            time_lst = data.time.values - data.time.values[0]
+            data = data.assign_coords(time = time_lst)
+            
+            
+            # Add file to list
+            piControl.append(data)
+            
+        
+        # Merge all files to one dataset 
+        dataset_annual = xr.merge(piControl, combine_attrs='override')
+        
+    
+    
+    
+    else: 
+        
+        
+        # Open data files as dataset
+        dataset_annual = xr.open_mfdataset(f'{path}cmip6_ps_{data_type}_*.nc')
+    
+    
+        # Select area
+        dataset_annual = dataset_annual.where((dataset_annual.lat > 0) & (dataset_annual.lat < 90) & (dataset_annual.lon > -90) & (dataset_annual.lon < 90), drop=True)
+        
+        
+        # Change time to integer
+        dataset_annual.coords['time'] = dataset_annual.coords['time'].astype(int)
+    
+    
+    # Change coordinate and variable names
+    dataset_annual = dataset_annual.rename({"CorrectedReggrided_ps":"ps"})
+    
+    
+    # Save annual data as netcdf4           
+    save_nc_data(dataset_annual, 'cmip6', 'Pressure', f'pressure_annual_{data_type}')    
+    
+    
+    
+    
+    return dataset_annual
 
 
