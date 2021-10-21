@@ -13,8 +13,9 @@ These functions are used in the notebooks:
 # Import necessary packages
 import pandas as pd
 import xarray as xr
+import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy.stats import linregress
 
 
 
@@ -96,6 +97,30 @@ def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     
     
     else: print('For model choose [NearestPoint, Timmerman]' )
+
+def get_decadal_trends_stds(data, time_period):
+    """
+    Function to obtain lists of years, trends and standard errors
+    
+    """
+    y0 = data.index[0] + time_period//2
+    yend = data.index[-1] - time_period//2
+    years = np.arange(y0, yend)
+    starting_years = np.arange(data.index[0], data.index[-1]-time_period)
+    trends = []
+    stds = []
+    
+    for yr in starting_years:
+        time = np.arange(yr, yr+time_period)
+        y = data.loc[yr:yr+time_period-1].values
+        trends.append(linregress(time,y).slope)
+        stds.append(linregress(time,y).stderr)
+        
+    return years, trends, stds
+
+
+
+
 
 
 # Declare global variables
@@ -364,3 +389,117 @@ def timeseries_per_station_one_model(zos, timeseries, model, var = ['wind_total'
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/timeseries_per_station_{model}.png')
     
     
+
+def plot_obs_trends_timeseries_per_station(tg_data, timeseries, var, model, data_type):
+    """
+    Function to make a plot of the trends over the whole timeseries of both 
+    tide gauge observations and regression results per station
+    
+    For var choose a list consisting of ['u$^2$', 'v$^2$', 'trend', 'total', 'wind total']
+    
+    """
+    
+    
+    plt.figure(figsize = (8.3,4))
+    trend_lst = []
+    se_lst = []
+    for stat in stations:
+        trend_lst.append(linregress(tg_data.index, tg_data[stat]).slope)
+        se_lst.append(linregress(tg_data.index, tg_data[stat]).stderr)
+        
+    plt.errorbar(stations, trend_lst, yerr=se_lst, fmt=".", label = 'Tide gauge')
+
+    for variab in var:
+        trend_lst = []
+        se_lst = []
+        for stat in stations:
+            trend_lst.append(linregress(timeseries.index, timeseries[stat, variab]).slope)
+            se_lst.append(linregress(timeseries.index, timeseries[stat, variab]).stderr)
+        
+        plt.errorbar(stations, trend_lst, yerr=se_lst, fmt=".", label = variab)
+
+    plt.xlabel('station')
+    plt.ylabel('Linear trend $\pm1\sigma$ [cm/y] ')
+    plt.tight_layout()
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.axhline(color='grey', linestyle='--')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/timeseries_trends_per_station_{data_type}.png')
+    
+    
+    
+    
+    
+    
+    
+def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, time_period, model, data_type, errorbar = True):
+    """
+    Function to make a plot of the trends over a certain decade of both 
+    tide gauge observations and regression results per station
+    
+    time_period specifies the time period over which to calculate the trend 
+    
+    For var choose a list consisting of ['u$^2$', 'v$^2$', 'trend', 'total', 'wind total']
+    
+    """
+    
+    fig, axs = plt.subplots(4, 2, figsize=(14, 9))
+
+
+    for i in range(4):
+
+
+        ax = axs[i,0]
+        years, trends, stds = get_decadal_trends_stds(tg_data[stations[2*i]], time_period)
+        if errorbar == True:
+            ax.errorbar(years, trends, yerr=stds, fmt=".", label = 'Tide gauge')
+        else:
+            ax.scatter(years, trends, marker='.', label = 'Tide gauge')
+            
+            
+        for variab in var:
+            years, trends, stds = get_decadal_trends_stds(timeseries[stations[2*i], variab], time_period)
+            if errorbar == True:
+                ax.errorbar(years, trends, yerr=stds, fmt=".", label = variab)
+            else:
+                ax.scatter(years, trends, marker='.', label = variab)
+                
+                
+        ax.set_title(f'station={stations[2*i]} \n linear trends over {time_period} years')
+        ax.set_xlabel('time [y]')
+        if errorbar == True:
+            ax.set_ylabel('linear trend [cm/year]\n $\pm 1\sigma$')
+        else:
+            ax.set_ylabel('linear trend [cm/year]')
+                
+        ax.set_ylim(-0.1,0.4)
+        ax.axhline(color='grey', linestyle='--')
+
+
+        ax = axs[i,1]
+        if i == 3:
+            fig.delaxes(axs[3,1])
+        else:
+            years, trends, stds = get_decadal_trends_stds(tg_data[stations[2*i+1]], time_period)
+            if errorbar == True:
+                ax.errorbar(years, trends, yerr=stds, fmt=".", label = 'Tide gauge')
+            else:
+                ax.scatter(years, trends, marker='.', label = 'Tide gauge')
+                
+                
+            for variab in var:
+                years, trends, stds = get_decadal_trends_stds(timeseries[stations[2*i+1], variab], time_period)
+                if errorbar == True:
+                    ax.errorbar(years, trends, yerr=stds, fmt=".", label = variab)
+                else:
+                    ax.scatter(years, trends, marker='.', label = variab)
+                
+            ax.set_title(f'station={stations[2*i]} \n linear trends over {time_period} years')
+            ax.set_xlabel('time [y]')
+            ax.set_ylim(-0.1,0.4)
+            ax.axhline(color='grey', linestyle='--')
+    
+    labels = ['Tide gauge']+var
+    fig.legend(labels=labels, loc=(0.57, 0.05))
+    plt.tight_layout()
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{time_period}_trends_per_station_{model}.png')
+   

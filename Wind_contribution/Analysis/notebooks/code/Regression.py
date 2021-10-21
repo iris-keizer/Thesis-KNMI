@@ -49,7 +49,29 @@ def timmerman_region_names():
     return ['Channel', 'South', 'Mid-West', 'Mid-East', 'North-West', 'North-East', 'Average']
 
 
+def save_nc_data(data, folder, variable, name): 
+    """
+    Function to save data as NETCDF4 file
+    
+    For folder choose ['observations', 'cmip6'], 
+    for variable choose ['Wind', 'SLH', 'Pressure', 'SST', 'Regression results']
+    
+    """
+    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc", mode='w')
 
+    
+def save_csv_data(data, folder, variable, name): 
+    """
+    Function to save data as .csv file
+    
+    For folder choose ['observations', 'cmip6'], 
+    for variable choose ['Wind', 'SLH', 'Pressure', 'SST', 'Regression results']
+    
+    """
+    data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.csv")
+
+    
+    
 # Declare global variables
 stations = station_names()
 regions = timmerman_region_names()
@@ -64,7 +86,7 @@ REGRESSION FUNCTION
 
      
 
-def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint'):
+def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 'era5'):
     """
     Function to perform the regression between the tide gauge data and observed wind data 
     
@@ -262,13 +284,19 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint'):
         results_df[regg_names[i]] = coef_lst_T[i]
         
     results_df = results_df.set_index('station')
+        
+        
+    # Save the dataframes
+    save_csv_data(results_df, 'observations', 'Regression results', f'results_{wind_model}_{data_type}')
+    save_csv_data(timeseries_df, 'observations', 'Regression results', f'timeseries_{wind_model}_{data_type}')
+        
     
     return(results_df, timeseries_df)
 
 
 
 
-def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint'):
+def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 'historical'):
     """
     Function to perform the regression between the cmip6 sea level and wind data
     
@@ -569,7 +597,13 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint'):
     # Put all model datasets in one dataset
     timeseries_dataset = xr.concat(timeseries_lst1, dim=wind_data.model.values).rename({"concat_dim":"model"})                           
     results_dataset = xr.concat(reg_results_lst, dim=wind_data.model.values).rename({"concat_dim":"model"})
-                                      
+        
+        
+    # Save the datasets
+    save_nc_data(results_dataset, 'cmip6', 'Regression results', f'results_{wind_model}_{data_type}')
+    save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', f'timeseries_{wind_model}_{data_type}')
+        
+        
     return(results_dataset, timeseries_dataset)
 
 
