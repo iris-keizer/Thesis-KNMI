@@ -36,7 +36,16 @@ def station_names():
     """
     return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
     
+def timmerman_region_names(): 
+    """
+    Function to obtain timmerman region names as list
     
+    """
+    return ['Channel', 'South', 'Mid-West', 'Mid-East', 'North-West', 'North-East', 'Average']
+
+
+
+
 def station_coords(): 
     """
     Function to obtain the coordinates of the tide gauge stations as a dataframe
@@ -115,7 +124,8 @@ def timmerman_regions():
     
     
     # Create regions 
-    Timmerman_regions = regionmask.Regions([Channel, South, Mid_West, Mid_East, North_West, North_East], numbers = region_numbers, 
+    Timmerman_regions = regionmask.Regions([Channel, South, Mid_West, Mid_East, North_West, North_East], 
+                                           numbers = region_numbers, 
                                            names=region_names, abbrevs=region_abbrevs, name="Timmerman")
     
     return Timmerman_regions
@@ -169,25 +179,44 @@ def get_proxies(pres):
     return slp_mean
 
 
-def new_df_obs_wind_per_var(data,  variable  = 'u2'):
+
+def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     """
     Function to create a new dataframe of observed wind data containing only zonal or meridional wind stress data
     
-    For variable choose ['u2', 'v2']
+    For variable choose ['u$^2$', 'v$^2$'ß]
+    
+    For model choose ['NearestPoint', 'Timmerman']
     
     """
     
-    return pd.DataFrame({stations[0]: data[stations[0],  variable],
-                      stations[1]: data[stations[1],  variable],
-                      stations[2]: data[stations[2],  variable],
-                      stations[3]: data[stations[3],  variable],
-                      stations[4]: data[stations[4],  variable],
-                      stations[5]: data[stations[5],  variable],}, index = data.index)
+    if model == 'NearestPoint':
+        return pd.DataFrame({stations[0]: data[stations[0],  variable],
+                          stations[1]: data[stations[1],  variable],
+                          stations[2]: data[stations[2],  variable],
+                          stations[3]: data[stations[3],  variable],
+                          stations[4]: data[stations[4],  variable],
+                          stations[5]: data[stations[5],  variable],}, index = data.index)
+    
+    
+    elif model == 'Timmerman':
+        
+        return pd.DataFrame({regions[0]: data[regions[0],  variable],
+                          regions[1]: data[regions[1],  variable],
+                          regions[2]: data[regions[2],  variable],
+                          regions[3]: data[regions[3],  variable],
+                          regions[4]: data[regions[4],  variable],
+                          regions[5]: data[regions[5],  variable],}, index = data.index)
+    
+    
+    else: print('For model choose [NearestPoint, Timmerman]' )
 
-
+        
+        
+        
 # Declare global variables
 stations = station_names()
-
+regions = timmerman_region_names()
 
 
 """
@@ -271,7 +300,7 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
     
     
     
-    if model == 'Nearest Point' or model ==  'Timmerman':
+    if model == 'NearestPoint' or model ==  'Timmerman':
         
         dataset_annual = xr.open_dataset(path + f'Wind/wind_annual_{data_type}.nc')  
          
@@ -285,7 +314,7 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
     
     
     
-    if model == 'Nearest Point':
+    if model == 'NearestPoint':
         
         # Obtain coordinates of the tide gauge stations
         coord_df = station_coords()
@@ -297,17 +326,17 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
         # Loop over the tide gauge stations
         for index, row in coord_df.iterrows():
             lst.append(pd.DataFrame(data={'time': dataset_annual.u2.year, 
-                                         'u2' : dataset_annual.u2.sel(lon = row.lon, 
+                                         'u$^2$' : dataset_annual.u2.sel(lon = row.lon, 
                                                                       lat = row.lat, method = 'nearest').to_series().dropna(), 
-                                         'v2' : dataset_annual.v2.sel(lon = row.lon, 
+                                         'v$^2$' : dataset_annual.v2.sel(lon = row.lon, 
                                                                       lat = row.lat, method = 'nearest').to_series().dropna()}))
             lst[-1] = lst[-1].set_index('time')
 
             annual_df = pd.concat(lst, axis=1, keys = stations[:-1])
 
 
-        data_u = new_df_obs_wind_per_var(annual_df,  variable  = 'u2')
-        data_v = new_df_obs_wind_per_var(annual_df,  variable  = 'v2')
+        data_u = new_df_obs_wind_per_var(annual_df, variable  = 'u$^2$', model = 'NearestPoint')
+        data_v = new_df_obs_wind_per_var(annual_df, variable  = 'v$^2$', model = 'NearestPoint')
 
         data_u['Average'] = data_u.mean(axis=1)
         data_v['Average'] = data_v.mean(axis=1)
@@ -331,11 +360,20 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
 
         for ds in regional_data:
             ds_avg = ds.mean('lon').mean('lat')
-            lst.append(pd.DataFrame(data={'time': ds_avg.year, 'u2' : ds_avg.u2, 'v2' : ds_avg.v2}))
+            lst.append(pd.DataFrame(data={'time': ds_avg.year, 'u$^2$' : ds_avg.u2, 'v$^2$' : ds_avg.v2}))
             lst[-1] = lst[-1].set_index('time')
 
         annual_df = pd.concat(lst, axis=1, keys = regions.names)
     
+        
+        data_u = new_df_obs_wind_per_var(annual_df, variable  = 'u$^2$', model = 'Timmerman')
+        data_v = new_df_obs_wind_per_var(annual_df, variable  = 'v$^2$', model = 'Timmerman')
+
+        data_u['Average'] = data_u.mean(axis=1)
+        data_v['Average'] = data_v.mean(axis=1)
+
+        annual_df = pd.concat([data_u, data_v], keys=['u$^2$','v$^2$'],  axis=1)
+        annual_df = annual_df.swaplevel(0,1, axis=1)
     
     
     
@@ -343,7 +381,9 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
         pres_data = get_proxies(dataset_annual) # List containing two xarray.datasets
         
         # Create dataframe
-        annual_df = pd.DataFrame(data={'time': pres_data[1].year, 'Negative corr' : pres_data[0].pressure.values, 'Positive corr' : pres_data[1].pressure.values})
+        annual_df = pd.DataFrame(data={'time': pres_data[1].year, 
+                                       'Negative corr region' : pres_data[0].pressure.values, 
+                                       'Positive corr region' : pres_data[1].pressure.values})
         annual_df =  annual_df.set_index('time')
     
             
@@ -390,7 +430,7 @@ def cmip6_get_nearest_point(data):
     """
     Function that makes a dataset with nearest wind to each tide gauge station and adds the average
     
-    data should be ['dataset_annual.u2',  'dataset_annual.v2']
+    data should be ['dataset_annual.u2', 'dataset_annual.v2']
     """
     
     
@@ -424,11 +464,12 @@ def cmip6_get_nearest_point(data):
 
 
 
-def import_cmip6_wind_data(model = 'Nearest Point', data_type = 'historical'):
+
+def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
     """
     Function that imports the observed wind data based on the preferred wind data model that is used for regression
     
-    For model choose ['Nearest Point', 'Dangendorf', 'Timmerman']
+    For model choose ['NearestPoint', 'Dangendorf', 'Timmerman']
     For data_type choose ['historical', 'piControl', 'ssp119', 'ssp126', 'ssp245', 'ssp370', 'ssp585']
     
     """
@@ -439,7 +480,7 @@ def import_cmip6_wind_data(model = 'Nearest Point', data_type = 'historical'):
     
     
     
-    if model == 'Nearest Point' or model ==  'Timmerman':
+    if model == 'NearestPoint' or model ==  'Timmerman':
         
         dataset_annual = xr.open_dataset(path + f'Wind/wind_annual_{data_type}.nc') 
          
@@ -448,12 +489,12 @@ def import_cmip6_wind_data(model = 'Nearest Point', data_type = 'historical'):
         
     elif model == 'Dangendorf':
         
-        dataset_annual = xr.open_dataset(path + f'Pressure/pres_annual_{data_type}.nc') 
+        dataset_annual = xr.open_dataset(path + f'Pressure/pressure_annual_{data_type}.nc') 
     
     
     
     
-    if model == 'Nearest Point':
+    if model == 'NearestPoint':
         
         
         # Obtain nearest wind points for zonal and meridional wind stress
@@ -470,15 +511,41 @@ def import_cmip6_wind_data(model = 'Nearest Point', data_type = 'historical'):
     elif model == 'Timmerman':
         
          
-        print("This model is not yet developed")
+        # Create wind data array per region
+        regions = timmerman_regions()
+        mask = regions.mask(dataset_annual)
+
+
+        regional_data = []  # List containing the dataset per region
+
+        for i in range(1,7):
+            regional_data.append(dataset_annual.where(mask == i, drop = True).mean('lon').mean('lat'))
+        
+        
+        
+        # Concatenate all datasets
+        dataset_annual = xr.concat(regional_data, regions.names).rename({'concat_dim':'tim_region'})
     
-    
-    
-    
+        
+        # Add average over regions
+        dataset_av = dataset_annual.mean('tim_region')
+        dataset_av = dataset_av.assign_coords({'tim_region':'Average'})
+        
+        
+        # Concatenate again
+        dataset_annual = xr.concat([dataset_annual, dataset_av], dim='tim_region')        
+
+
+        
+        
     elif model == 'Dangendorf':
         
+        # Create pressure data averaged per positive or negative correlation region
+        pres_data = get_proxies(dataset_annual) # List containing two xarray.datasets
         
-        print("This model is not yet developed")
+    
+        # Add both dataarrays to a dataset
+        dataset_annual = xr.Dataset({'Negative corr region': pres_data[0].ps, 'Positive corr region':pres_data[1].ps})
     
             
     return dataset_annual

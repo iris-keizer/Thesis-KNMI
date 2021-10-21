@@ -34,6 +34,16 @@ def station_names():
     return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
 
 
+def timmerman_region_names(): 
+    """
+    Function to obtain timmerman region names as list
+    
+    """
+    return ['Channel', 'South', 'Mid-West', 'Mid-East', 'North-West', 'North-East', 'Average']
+
+
+
+
 def get_savefig_path(data_type = 'observations',  wind_model =  'Nearest Point', wind_data_type = 'era5'):
     
     """
@@ -53,27 +63,44 @@ def get_savefig_path(data_type = 'observations',  wind_model =  'Nearest Point',
     return path
 
 
-def new_df_obs_wind_per_var(data,  variable  = 'u$^2$'):
+
+def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     """
     Function to create a new dataframe of observed wind data containing only zonal or meridional wind stress data
     
     For variable choose ['u$^2$', 'v$^2$']
     
+    For model choose ['NearestPoint', 'Timmerman']
+    
     """
     
-    return pd.DataFrame({stations[0]: data[stations[0],  variable],
-                      stations[1]: data[stations[1],  variable],
-                      stations[2]: data[stations[2],  variable],
-                      stations[3]: data[stations[3],  variable],
-                      stations[4]: data[stations[4],  variable],
-                      stations[5]: data[stations[5],  variable],
-                      stations[6]: data[stations[6],  variable],}, index = data.index)
-
-
+    if model == 'NearestPoint':
+        return pd.DataFrame({stations[0]: data[stations[0],  variable],
+                          stations[1]: data[stations[1],  variable],
+                          stations[2]: data[stations[2],  variable],
+                          stations[3]: data[stations[3],  variable],
+                          stations[4]: data[stations[4],  variable],
+                          stations[5]: data[stations[5],  variable],
+                          stations[6]: data[stations[6],  variable],}, index = data.index)
+    
+    
+    elif model == 'Timmerman':
+        
+        return pd.DataFrame({regions[0]: data[regions[0],  variable],
+                          regions[1]: data[regions[1],  variable],
+                          regions[2]: data[regions[2],  variable],
+                          regions[3]: data[regions[3],  variable],
+                          regions[4]: data[regions[4],  variable],
+                          regions[5]: data[regions[5],  variable],
+                          regions[6]: data[regions[6],  variable],}, index = data.index)
+    
+    
+    else: print('For model choose [NearestPoint, Timmerman]' )
 
 
 # Declare global variables
 stations = station_names()
+regions = timmerman_region_names()
 many_colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan',
               'silver', 'lightcoral',  'maroon', 'tomato', 'chocolate', 'peachpuff', 'gold',  'goldenrod', 'yellow', 'yellowgreen', 'lawngreen',
               'palegreen', 'darkgreen', 'mediumseagreen', 'springgreen', 'aquamarine', 'mediumturquoise', 'paleturquoise', 'darkcyan', 'steelblue', 
@@ -100,36 +127,53 @@ def plot_tg_data(data):
     data.plot(figsize=(9,3), title='Tide gauge time series', 
               ylabel = 'Sea level height above NAP [cm]',
              xlabel = 'Time [y]')
-    
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.tight_layout()
     plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/tide_gauge.png')
 
     
     
 
-def plot_obs_wind_data(data):
+    
+def plot_obs_wind_data(data, model = 'NearestPoint'):
     """
     Function to make lineplots of the observed zonal and meridional wind data for each station 
     
     """
     
     
-    u2_df = new_df_obs_wind_per_var(data)
+    u2_df = new_df_obs_wind_per_var(data, model = model)
     u2_df.plot(figsize=(9,3), title='Annual zonal wind stress', 
               ylabel = 'u$^2$ [m$^2$/s$^2$]',
              xlabel = 'Time [y]')
+    plt.tight_layout()
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/NearestPoint/u2_all_stations.png')
     
-    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/Nearest Point/u2_all_stations.png')
     
-    
-    v2_df = new_df_obs_wind_per_var(data, variable = 'v$^2$')
+    v2_df = new_df_obs_wind_per_var(data, variable = 'v$^2$', model = model)
     v2_df.plot(figsize=(9,3), title='Annual meridional wind stress', 
               ylabel = 'v$^2$ [m$^2$/s$^2$]',
              xlabel = 'Time [y]')
+    plt.tight_layout()
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/NearestPoint/v2_all_stations.png')
     
-    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/Nearest Point/v2_all_stations.png')
+       
+def plot_obs_pres_data(data, model):
+    """
+    Function to make a lineplot of the observed pressure proxy for wind data
     
+    """
     
-    
+    data.plot(figsize=(9,3), title='Annual observed atmospheric proxies', 
+              ylabel = 'Regional averaged sea level pressure [Pa]',
+             xlabel = 'Time [y]')
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.tight_layout()
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/tide_gauge.png')
+
+            
     
 def plot_zos_data(data, data_type):
     """
@@ -144,7 +188,7 @@ def plot_zos_data(data, data_type):
     plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/zos_per_station.png')
     
     
-def plot_obs_result_per_station(data, variable, data_type):
+def plot_obs_result_per_station(data, variable, model, data_type):
     """
     Function to make a scatter plot of observational regression results per station for a specific variable
     
@@ -157,13 +201,15 @@ def plot_obs_result_per_station(data, variable, data_type):
     plt.tight_layout()
     plt.title(f'{variable} results of regression between slh and wind')
     plt.axhline(color='grey', linestyle='--')
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/Nearest Point/{variable}_per_station_{data_type}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{variable}_per_station_{data_type}.png')
     
     
-def plot_obs_timeseries_per_station(tg_data, timeseries, var = ['Wind total']):
+    
+    
+def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type):
     """
     Function to make a plot of the tg_data timeseries and regression result for each station
-    For var choose a list consisting of ['u$^2$', 'v$^2$', 'trend', 'Total', 'Wind total']
+    For var choose a list consisting of ['u$^2$', 'v$^2$', 'trend', 'total', 'wind total']
     
     """
     
@@ -201,23 +247,42 @@ def plot_obs_timeseries_per_station(tg_data, timeseries, var = ['Wind total']):
     
     labels=['tide gauge data']+var
     fig.legend(labels=labels, loc=(0.57, 0.1))
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/Nearest Point/timeseries_per_station_{var}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/timeseries_per_station_{var}_{data_type}.png')
     
     
     
-def plot_cmip6_wind_data(data, variable, data_type):
+def plot_cmip6_wind_data(data, variable, model, data_type):
     """
     Function to make a lineplot of all cmip6 wind model data for each station
     
     """
     
+    if model == 'NearestPoint':
+        col = 'station'
+    elif model == 'Timmerman':
+        col = 'tim_region'
+        
+    data[variable].plot.line(x='time', hue='model', col = col, 
+                             col_wrap=2, add_legend=False, figsize = (15, 10), sharex=False)
     
-    data[variable].plot.line(x='time', hue='model', col = 'station', col_wrap=2, add_legend=False, figsize = (15, 10), sharex=False)
     
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{model}/{variable}_per_station_{data_type}.png')
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{variable}_per_station.png')
+def plot_cmip6_pres_data(data, variable, model, data_type):
+    """
+    Function to make a lineplot of all cmip6 wind model data for each station
     
-    
+    """
+
+        
+    data[variable].plot.line(x='time', hue='model', add_legend=False, figsize = (9, 3))
+    if variable == 'Negative corr region':
+        plt.title(f'Annual cmip6 ({data_type}) negative correlated atmospheric proxy')
+    if variable == 'Positive corr region':
+        plt.title(f'Annual cmip6 ({data_type}) positive correlated atmospheric proxy')
+    plt.ylabel(f'ps [Pa]')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{model}/{variable}_per_station_{data_type}.png')
+     
 
     
 def plot_cmip6_two_variables(data, var1, var2, data_type):
