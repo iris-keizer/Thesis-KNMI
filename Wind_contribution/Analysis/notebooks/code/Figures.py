@@ -16,7 +16,7 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
-
+from statistics import *
 
 
 """
@@ -503,3 +503,63 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
     plt.tight_layout()
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{time_period}_trends_per_station_{model}.png')
    
+
+import matplotlib.pyplot as plt
+from scipy.stats import linregress
+from statistics import *
+
+def plot_cmip6_trends_timeseries_per_station_model_averages(zos, timeseries, var, wind_model, data_type, errorbar = True):
+    """
+    Function to make a plot of the trends over the whole timeseries of both 
+    tide gauge observations and regression results per station averaged over all models
+    
+    For var choose a list consisting of ['u$^2$', 'v$^2$', 'trend', 'total', 'wind total']
+    
+    """
+    
+    
+    plt.figure(figsize = (8.3,4))
+    trend_lst = []
+    se_lst = []
+    for stat in stations:
+        trend_lst1 = []
+        se_lst1 = []
+        for model in timeseries.model.values:
+            trend_lst1.append(linregress(zos.time.values, zos.zos.sel(station=stat, model = model).values).slope)
+            se_lst1.append(linregress(zos.time.values, zos.zos.sel(station=stat, model = model).values).stderr)
+        trend_lst.append(mean(trend_lst1))
+        se_lst.append(mean(se_lst1))
+    if errorbar == True:
+        plt.errorbar(stations, trend_lst, yerr=se_lst, fmt=".", label = 'Tide gauge')
+    else:
+        plt.scatter(stations, trend_lst, marker='.', label = 'Tide gauge')
+        
+    for variab in var:
+        trend_lst = []
+        se_lst = []
+        for stat in stations:
+            trend_lst1 = []
+            se_lst1 = []
+            for model in timeseries.model.values:
+                trend_lst1.append(linregress(timeseries.time.values, timeseries[variab].sel(station=stat, model = model)).slope)
+                se_lst1.append(linregress(timeseries.time.values, timeseries[variab].sel(station=stat, model = model)).stderr)
+            trend_lst.append(mean(trend_lst1))
+            se_lst.append(mean(se_lst1))
+        
+        if errorbar == True:
+            plt.errorbar(stations, trend_lst, yerr=se_lst, fmt=".", label = variab)
+        else:
+            plt.scatter(stations, trend_lst, marker='.', label = variab)
+        
+
+    plt.xlabel('station')
+    if errorbar == True:
+        plt.ylabel('Linear trend $\pm1\sigma$ [cm/y] ')
+    else:
+        plt.ylabel('Linear trend [cm/y] ')
+    plt.tight_layout()
+    plt.title('Trend per station averaged over all models')
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.axhline(color='grey', linestyle='--')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{wind_model}/timeseries_trends_per_station_{data_type}.png')
+    
