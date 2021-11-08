@@ -80,7 +80,7 @@ def save_csv_data(data, folder, variable, name):
     data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.csv")
 
 
-
+stations = station_names()
 
 
 """
@@ -117,7 +117,6 @@ def prep_tg_data_obs():
     filelist_df = filelist_df.set_index('id')
     filelist_df = filelist_df.loc[loc_num, :]
     names_col = ('time', 'height', 'interpolated', 'flags')
-    station_names = get_station_names()
     
     for i in range(len(loc_num)):
             tg_data = pd.read_csv(path_tg + '/data/' + str(loc_num[i]) + 
@@ -135,10 +134,10 @@ def prep_tg_data_obs():
                 tg_data_df[str(loc_num[i])] = tg_data.height
             
 
-    tg_data_df = tg_data_df.rename(columns={"20": station_names[0], 
-                              "22": station_names[1], "23": station_names[2],
-                              "24": station_names[3], "25": station_names[4],
-                              "32": station_names[5]})
+    tg_data_df = tg_data_df.rename(columns={"20": stations[0], 
+                              "22": stations[1], "23": stations[2],
+                              "24": stations[3], "25": stations[4],
+                              "32": stations[5]})
 
     tg_data_df = tg_data_df.interpolate(method='slinear')
     tg_data_df['Average'] = tg_data_df.mean(axis=1) # Add column containing the average of the stations 
@@ -461,9 +460,6 @@ def prep_slh_data_cmip6(data_type = 'historical'):
         lst.append(dataset_annual.zos.sel(lon = row.lon, lat = row.lat, method = 'nearest'))
         lst[-1] = lst[-1].drop(['lat', 'lon'])
     
-    
-    # Get station names as a list
-    stations = station_names()
     
     
     # Create a dataarray

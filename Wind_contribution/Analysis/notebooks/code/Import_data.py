@@ -18,7 +18,9 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import regionmask
-
+import statsmodels.api as sm
+import statsmodels as sm
+from scipy.signal import detrend
 
 
 """
@@ -212,11 +214,25 @@ def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     else: print('For model choose [NearestPoint, Timmerman]' )
 
         
-        
-        
+def get_frac(window, data, dtype='DataFrame'):
+    if dtype == 'DataFrame':
+        frac = window / (data.index[-1]-data.index[0])
+    elif dtype == 'DataSet':
+        frac = window / (data.time.values[-1] - data.time.values[0])
+    else: print('Datatype unknown')
+    
+    return frac
+
+
+
+
+
+
+    
 # Declare global variables
 stations = station_names()
 regions = timmerman_region_names()
+lowess = sm.nonparametric.smoothers_lowess.lowess
 
 
 """
@@ -364,16 +380,7 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
             lst[-1] = lst[-1].set_index('time')
 
         annual_df = pd.concat(lst, axis=1, keys = regions.names)
-    
-        
-        data_u = new_df_obs_wind_per_var(annual_df, variable  = 'u$^2$', model = 'Timmerman')
-        data_v = new_df_obs_wind_per_var(annual_df, variable  = 'v$^2$', model = 'Timmerman')
 
-        data_u['Average'] = data_u.mean(axis=1)
-        data_v['Average'] = data_v.mean(axis=1)
-
-        annual_df = pd.concat([data_u, data_v], keys=['u$^2$','v$^2$'],  axis=1)
-        annual_df = annual_df.swaplevel(0,1, axis=1)
     
     
     
@@ -525,15 +532,7 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
         
         # Concatenate all datasets
         dataset_annual = xr.concat(regional_data, regions.names).rename({'concat_dim':'tim_region'})
-    
-        
-        # Add average over regions
-        dataset_av = dataset_annual.mean('tim_region')
-        dataset_av = dataset_av.assign_coords({'tim_region':'Average'})
-        
-        
-        # Concatenate again
-        dataset_annual = xr.concat([dataset_annual, dataset_av], dim='tim_region')        
+          
 
 
         
@@ -549,6 +548,9 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
     
             
     return dataset_annual
+
+
+
 
 
 
