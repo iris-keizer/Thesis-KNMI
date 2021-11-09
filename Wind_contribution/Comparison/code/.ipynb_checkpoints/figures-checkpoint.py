@@ -15,6 +15,7 @@ comparison.ipynb
 
 # Import necessary packages
 import numpy as np
+import xarray as xr
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -92,7 +93,7 @@ def plot_obs_tg_wc_one_station(tg_data, ts_lst, labels, station = 'Average', sho
     
     if show_tg == False:
         labels = labels[1:]
-    plt.legend(labels=labels, bbox_to_anchor=(0.5,-.5))
+    plt.legend(labels=labels, bbox_to_anchor=(1,1))
     plt.tight_layout()
     
     if show_tg:
@@ -116,7 +117,7 @@ def plot_obs_tg_wc_all_stations(tg_data, ts_lst, labels, show_tg = True, smoothe
     styles = ['--', '--', '--','-', '-', '-']
     
     
-    fig, axs = plt.subplots(4, 2, figsize=(10, 8))
+    fig, axs = plt.subplots(4, 2, figsize=(14, 10))
 
 
     for i in range(4):
@@ -208,7 +209,107 @@ def plot_obs_tg_wc_all_stations(tg_data, ts_lst, labels, show_tg = True, smoothe
     
     
     
+def plot_obs_running_trend_acceleration(data_lst, label_lst, period_length = 40, station = 'Average'):
+    df_lst_trend = []
+    df_lst_acc = []
     
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:blue', 'tab:orange', 'tab:green']
+    alphas = [1,1,1,0.6,0.6,0.6]
+    
+    for data in data_lst:
+        starting_idx = np.arange(period_length//2, data.index.size-period_length//2, 1)
+        
+        time_lst = []
+        trend_lst = []
+        acc_lst = []
+        for i in starting_idx:
+            time = data.index[i:i+period_length]
+            
+            y = data[station][i:i+period_length].values
+            
+            fit = np.polyfit(time, y, 2)
+            time_lst.append(data.index[i+period_length//2])
+            trend_lst.append(fit[1])
+            acc_lst.append(fit[0])
+            
+        df_lst_trend.append(pd.DataFrame({'time':time_lst, 'trend':trend_lst}))
+        df_lst_trend[-1] = df_lst_trend[-1].set_index('time')
+        df_lst_acc.append(pd.DataFrame({'time':time_lst, 'acceleration':acc_lst}))
+        df_lst_acc[-1] = df_lst_acc[-1].set_index('time')
+        
+        
+    df_trend = pd.concat(df_lst_trend, axis=1, keys=label_lst)
+    df_trend.columns = df_trend.columns.droplevel(1)
+    df_acc = pd.concat(df_lst_acc, axis=1, keys=label_lst)
+    df_acc.columns = df_acc.columns.droplevel(1)
+    
+    
+    plt.figure(figsize=(9,3))
+    for i, label in enumerate(label_lst):
+        plt.scatter(df_trend.index, df_trend[label], label = label,
+                   marker = 'x', s=3, color = colors[i], alpha = alphas[i])
+    plt.xlabel('time [y]')
+    plt.ylabel('trend [cm/y]')
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.tight_layout()
+    
+    plt.figure(figsize=(9,3))
+    for i, label in enumerate(label_lst):
+        plt.scatter(df_acc.index, df_acc[label], label = label,
+                   marker = 'x', s=3, color = colors[i], alpha = alphas[i])
+    plt.xlabel('time [y]')
+    plt.ylabel('acceleration [cm/y$^2$]')
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.tight_layout()
+    
+    
+    
+def plot_obs_running_trend(data_lst, label_lst, period_length = 40, station = 'Average'):
+    df_lst_trend = []
+    
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:blue', 'tab:orange', 'tab:green']
+    alphas = [1,1,1,0.6,0.6,0.6]
+    
+    for data in data_lst:
+        
+        time_lst = []
+        trend_lst = []
+        for i in range(data.index.size-period_length):
+            time = data.index[i:i+period_length]
+            
+            y = data[station][i:i+period_length].values
+            
+            fit = np.polyfit(time, y, 1)
+            time_lst.append(time[period_length//2])
+            trend_lst.append(fit[0])
+            
+        df_lst_trend.append(pd.DataFrame({'time':time_lst, 'trend':trend_lst}))
+        df_lst_trend[-1] = df_lst_trend[-1].set_index('time')
+        
+        
+    df_trend = pd.concat(df_lst_trend, axis=1, keys=label_lst)
+    df_trend.columns = df_trend.columns.droplevel(1)
+    
+    
+    plt.figure(figsize=(9,3))
+    for i, label in enumerate(label_lst):
+        plt.scatter(df_trend.index, df_trend[label]*10, label = label,
+                   marker = 'x', s=3, color = colors[i], alpha = alphas[i])
+    plt.xlabel('time [y]')
+    plt.ylabel('trend [mm/y]')
+    plt.ylim(-0.5,1.1)
+    plt.legend(bbox_to_anchor=(1, 1))
+    plt.axhline(color='k', linestyle='--', linewidth = 1)
+    plt.tight_layout()
+    
+
+    
+   
+
+
+
+
+
     
     
     
@@ -330,6 +431,8 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
                     
             
 def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, station, wind_model):
+    markers = ['v', '^', '<', '>']
+    
     
     plt.figure()
     
@@ -338,11 +441,11 @@ def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, 
         
         plt.scatter(results_era5['u$^2$'][station], 
                     results_era5['v$^2$'][station], 
-                    label = '', marker='x',color='b', s=80)
+                    label = '', marker='x',color='k', s=80)
         
         plt.scatter(results_20cr['u$^2$'][station], 
                     results_20cr['v$^2$'][station], 
-                    label = '', marker='x',color='r', s=80)
+                    label = '', marker='+',color='k', s=100)
         
         for idx, model in enumerate(results_hist.model.values):
                 
@@ -351,11 +454,12 @@ def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, 
 
                 plt.scatter(results_hist.u2.sel(station=station, model = model).values, 
                                 results_hist.v2.sel(station=station, model = model).values, 
-                                label = '', marker='x', alpha=.7, color = many_colors[idx])
+                                marker = markers[int((3.6*idx)/36)], alpha=.8)
 
 
             elif wind_model == 'Timmerman':
-                        
+                 
+                
                 u2 = (results_hist.channel_u2.sel(station=station, model = model).values + 
                       results_hist.south_u2.sel(station=station, model = model).values + 
                       results_hist.midwest_u2.sel(station=station, model = model).values + 
@@ -370,13 +474,14 @@ def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, 
                       results_hist.northwest_v2.sel(station=station, model = model).values + 
                       results_hist.northeast_v2.sel(station=station, model = model).values)
 
-
                 plt.scatter(u2, v2, 
-                            label = '', marker='o', alpha=.5, color = many_colors[idx])
+                            marker = markers[int((3.6*idx)/36)], alpha=.8)
 
                 
         plt.xlabel('u$^2$ reg. coef. [-]')
-        plt.ylabel('v$^2$ reg. coef. [-]')     
+        plt.ylabel('v$^2$ reg. coef. [-]')  
+        plt.xlim(-3.5,3.5)
+        plt.ylim(-2,2)
                 
                 
     elif wind_model == 'Dangendorf':
@@ -387,16 +492,17 @@ def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, 
         
         plt.scatter(results_20cr['Negative corr region'][station], 
                     results_20cr['Positive corr region'][station], 
-                    label = '', marker='v',color='k', s=80)
+                    label = '', marker='+',color='k', s=100)
 
         
         for idx, model in enumerate(results_hist.model.values):
             plt.scatter(results_hist.neg_corr_region.sel(station=station, model = model).values, 
                         results_hist.pos_corr_region.sel(station=station, model = model).values, 
-                        label = '', marker='o', alpha=.5, color = many_colors[idx])
+                        marker=markers[int((3.6*idx)/36)], alpha=.8)
         plt.xlabel('negative reg. coef. [-]')
         plt.ylabel('positive reg. coef. [-]')
-    
+        plt.ylim(-2.9, 2.9)
+        plt.xlim(-2.9, 2.9)
             
     else: print('wind_model does not exist!')
         
@@ -404,6 +510,8 @@ def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, 
     plt.title(f'wind regression model = {wind_model}')
     labels = ['era5','20cr'] + list(results_hist.model.values)
     plt.legend(labels=labels, ncol=3, bbox_to_anchor=(1.1, 1))
+    plt.axhline(color='k', linestyle='-', linewidth = 0.3)
+    plt.axvline(color='k', linestyle='-', linewidth = 0.3)
     plt.grid()
 
     
@@ -647,97 +755,81 @@ def plot_cmip6_fits_per_model(data, fit_df1, fit_df2):
         #ax.set_ylim(y_min,y_max)
         plt.tight_layout()
         
+
         
-        
-def plot_obs_running_trend_acceleration(data_lst, label_lst, period_length = 40, station = 'Average'):
-    df_lst_trend = []
-    df_lst_acc = []
-    
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:blue', 'tab:orange', 'tab:green']
-    alphas = [1,1,1,0.6,0.6,0.6]
-    
-    for data in data_lst:
-        starting_idx = np.arange(period_length//2, data.index.size-period_length//2, 1)
-        
-        time_lst = []
-        trend_lst = []
-        acc_lst = []
-        for i in starting_idx:
-            time = data.index[i:i+period_length]
-            
-            y = data[station][i:i+period_length].values
-            
-            fit = np.polyfit(time, y, 2)
-            time_lst.append(data.index[i+period_length//2])
-            trend_lst.append(fit[1])
-            acc_lst.append(fit[0])
-            
-        df_lst_trend.append(pd.DataFrame({'time':time_lst, 'trend':trend_lst}))
-        df_lst_trend[-1] = df_lst_trend[-1].set_index('time')
-        df_lst_acc.append(pd.DataFrame({'time':time_lst, 'acceleration':acc_lst}))
-        df_lst_acc[-1] = df_lst_acc[-1].set_index('time')
-        
-        
-    df_trend = pd.concat(df_lst_trend, axis=1, keys=label_lst)
-    df_trend.columns = df_trend.columns.droplevel(1)
-    df_acc = pd.concat(df_lst_acc, axis=1, keys=label_lst)
-    df_acc.columns = df_acc.columns.droplevel(1)
-    
-    
-    plt.figure(figsize=(9,3))
-    for i, label in enumerate(label_lst):
-        plt.scatter(df_trend.index, df_trend[label], label = label,
-                   marker = 'x', s=3, color = colors[i], alpha = alphas[i])
-    plt.xlabel('time [y]')
-    plt.ylabel('trend [cm/y]')
-    plt.legend(bbox_to_anchor=(1, 1))
-    plt.tight_layout()
-    
-    plt.figure(figsize=(9,3))
-    for i, label in enumerate(label_lst):
-        plt.scatter(df_acc.index, df_acc[label], label = label,
-                   marker = 'x', s=3, color = colors[i], alpha = alphas[i])
-    plt.xlabel('time [y]')
-    plt.ylabel('acceleration [cm/y$^2$]')
-    plt.legend(bbox_to_anchor=(1, 1))
-    plt.tight_layout()
-    
-def plot_obs_running_trend(data_lst, label_lst, period_length = 40, station = 'Average'):
+def plot_cmip6_running_trend(data_lst, label_lst, period_length = 40, station = 'Average'):
     df_lst_trend = []
     
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:blue', 'tab:orange', 'tab:green']
     alphas = [1,1,1,0.6,0.6,0.6]
     
+    y_min = -1.1
+    y_max = 1.1
+    
+    xr_lst1 = []
     for data in data_lst:
+        data = data.sel(station = station)
         
-        time_lst = []
-        trend_lst = []
-        for i in range(data.index.size-period_length):
-            time = data.index[i:i+period_length]
+        xr_lst = []
+        for model in data.model.values:
             
-            y = data[station][i:i+period_length].values
+            time_lst = []
+            trend_lst = []
+            for i in range(data.time.size-period_length):
+                time = data.time[i:i+period_length].values
+
+                y = data.sel(model = model)[i:i+period_length].values
+
+                fit = np.polyfit(time, y, 1)
+                time_lst.append(time[period_length//2])
+                trend_lst.append(fit[0]*10)
             
-            fit = np.polyfit(time, y, 1)
-            time_lst.append(time[period_length//2])
-            trend_lst.append(fit[0])
+            xr_lst.append(xr.DataArray(data = trend_lst, dims = ['time'], coords = dict(time = time_lst), 
+                         attrs=dict(units = 'mm/y', description = 'Trend resulting from linear fit', name = 'trend')))
             
-        df_lst_trend.append(pd.DataFrame({'time':time_lst, 'trend':trend_lst}))
-        df_lst_trend[-1] = df_lst_trend[-1].set_index('time')
-        
-        
-    df_trend = pd.concat(df_lst_trend, axis=1, keys=label_lst)
-    df_trend.columns = df_trend.columns.droplevel(1)
+        xr_lst1.append(xr.concat(xr_lst, dim=data.model.values).rename({'concat_dim':'model'}))
     
     
-    plt.figure(figsize=(9,3))
-    for i, label in enumerate(label_lst):
-        plt.scatter(df_trend.index, df_trend[label]*10, label = label,
-                   marker = 'x', s=3, color = colors[i], alpha = alphas[i])
-    plt.xlabel('time [y]')
-    plt.ylabel('trend [mm/y]')
-    plt.legend(bbox_to_anchor=(1, 1))
-    plt.tight_layout()
+    dataset = xr.Dataset(data_vars = {label_lst[0]:xr_lst1[0], label_lst[1]:xr_lst1[1], label_lst[2]:xr_lst1[2]})
     
+    
+    fig, axs = plt.subplots(9, 4, figsize=(24, 20))
+    models = dataset.model.values
 
     
-   
+    for i in range(9):
+        
+        
+        ax = axs[i,0]
+        
+        for label in label_lst:
+            ax.scatter(dataset.time.values, dataset[label].sel(model = models[4*i]).values,
+                       marker = 'x', s=3)
+        ax.set_ylabel('trend [mm/y]')
+        ax.set_title(f'model = {models[4*i]}')
+        ax.set_ylim(y_min, y_max)
+        if i == 0:
+            ax.legend(labels = label_lst)
+        if i == 8:
+            ax.set_xlabel('time [y]')
+        ax.axhline(color='k', linestyle='--', linewidth = 1)
+        plt.tight_layout()
+        
+        
+        for j in range(1,4):
+            ax = axs[i,j]
+
+            for label in label_lst:
+                ax.scatter(dataset.time.values, dataset[label].sel(model = models[4*i+j]).values,
+                           marker = 'x', s=3)
+            ax.axhline(color='k', linestyle='--', linewidth = 1)
+            ax.set_ylim(y_min, y_max)
+            ax.set_title(f'model = {models[4*i+j]}')
+            if i == 8:
+                ax.set_xlabel('time [y]')
+            plt.tight_layout()
+            
+    plt.tight_layout()
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/cmip6_trend_allmodels')
+        
+        
