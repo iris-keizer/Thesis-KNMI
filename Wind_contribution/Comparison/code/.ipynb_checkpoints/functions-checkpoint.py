@@ -18,6 +18,7 @@ import statsmodels as sm
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from scipy.signal import detrend
 from scipy import optimize
 
@@ -70,8 +71,21 @@ lowess = sm.nonparametric.smoothers_lowess.lowess
 
 
 
+def obs_one_var_one_station_df(data_np, data_tim, data_dang, variable = 'wind total', station = 'Average'):
+    """
+    Function to create a new dataframe containing detrended and / or smoothed version of observational data
+    for all wind models and one station
+    
+    
+    """
+    
+    df = pd.DataFrame({'time':data_np.index.values, 'NearestPoint':detrend(data_np['Average', variable]),
+                                   'Timmerman':detrend(data_tim['Average', variable]), 
+                       'Dangendorf':detrend(data_dang['Average', variable])})
 
+    df = df.set_index('time')
 
+    return df 
 
 
 
@@ -255,3 +269,31 @@ def obtain_cmip6_sine_fits(data_lst, label_lst, wavelength):
     
     
     return df_res, df_perf
+
+
+
+def cmip6_one_var_one_station_df(data_np, data_tim, data_dang, variable = 'wind_total', station = 'Average'):
+    """
+    Function to create a new dataframe containing detrended and / or smoothed version of model data
+    for all wind models and one station and one variable
+    
+    
+    """
+    
+    detrended_np = detrend_dim(data_np[variable].sel(station='Average', drop=True), 'time')
+    detrended_tim = detrend_dim(data_tim[variable].sel(station='Average', drop=True), 'time')
+    detrended_dang = detrend_dim(data_dang[variable].sel(station='Average', drop=True), 'time')
+    
+    dfs = []
+    
+    for model in detrended_np.model.values:
+        df = pd.DataFrame({'time':detrended_np.time.values, 'NearestPoint': detrended_np.sel(model=model, drop=True),
+                           'Timmerman':detrended_tim.sel(model=model, drop=True), 
+                           'Dangendorf':detrended_dang.sel(model=model, drop=True)})
+
+        dfs.append(df.set_index('time'))
+    
+    
+    df = pd.concat(dfs, axis=1, keys = detrended_np.model.values)
+    
+    return df 

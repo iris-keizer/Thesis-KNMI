@@ -79,6 +79,11 @@ significance_level = 95
 alphas = [0.03582961338564776, 0.07386858364808699, 0.09391780126679188, 0.13034639992652514, 
           0.21143711191718467, 0.0657308019386455, 0.02740434989586052]
 
+
+
+
+
+
 """
 REGRESSION FUNCTION
 -------------------
@@ -300,6 +305,11 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
 
 
 
+
+
+
+
+
 def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 'historical'):
     """
     Function to perform the regression between the cmip6 sea level and wind data
@@ -316,10 +326,6 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
     # Get names of all regression and wind regression coefficients
     regg_names, wind_names =  regression_names(wind_model)
     
-    
-    # Only use models occuring in both datasets
-    tg_data = tg_data.where(tg_data.model.isin(wind_data.model), drop=True)
-    wind_data = wind_data.where(wind_data.model.isin(tg_data.model), drop=True)
     
     
     # Create lists to save datasets
@@ -426,7 +432,7 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
             
             # Fit the regression model and add results to lists
             if  wind_model == 'Timmerman':
-                fit = regression_.fit(x, y.values.ravel())  # Raises warnings
+                fit = regression_.fit(x, y.values.ravel())
                 alpha = regression_.alpha_
                 alpha_lst.append(alpha)
                 regression_ = Lasso(alpha)
@@ -593,8 +599,8 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
         elif wind_model == 'Dangendorf':
             reg_results_lst.append(xr.Dataset(data_vars=dict(r2=(['station'], R2_total_lst),
                                                             r2_wind=(['station'], R2_wind_lst),
-                                                            r2_u2=(['station'], R2_u2_lst),
-                                                            r2_v2=(['station'], R2_v2_lst),
+                                                            r2_neg=(['station'], R2_u2_lst),
+                                                            r2_pos=(['station'], R2_v2_lst),
                                                             rmse=(['station'], rmse_lst),
                                                             constant=(['station'], intercept_lst),
                                                             neg_corr_region=(['station'], coef_lst_T[0]),
@@ -618,7 +624,7 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
     # Save the datasets
     save_nc_data(results_dataset, 'cmip6', 'Regression results', f'results_{wind_model}_{data_type}')
     save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', f'timeseries_{wind_model}_{data_type}')
-        
+    save_csv_data(signif_dataset, 'cmip6', 'Regression results', f'significance_{wind_model}_{data_type}')    
         
     return(results_dataset, timeseries_dataset, signif_dataset)
 

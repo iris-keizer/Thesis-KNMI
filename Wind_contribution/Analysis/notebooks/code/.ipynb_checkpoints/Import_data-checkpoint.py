@@ -58,14 +58,14 @@ def station_coords():
     # Necessary declarations to obtain tide gauge station coordinates
     path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual/filelist.txt'
     loc_num = [20, 22, 23, 24, 25, 32]
-    col_names = ['id', 'lat', 'lon', 'name', 'coastline_code', 'station_code', 'quality']
+    col_names = ['id', 'lat', 'lon', 'station', 'coastline_code', 'station_code', 'quality']
     
     # Create dataframe
     df = pd.read_csv(path_locations, sep=';', header=None, names=col_names)
     df = df.set_index('id')
     df = df.loc[loc_num, :]
-    df['name'] = stations[:-1]
-    df = df.set_index('name')
+    df['station'] = stations[:-1]
+    df = df.set_index('station')
     df = df.drop(['coastline_code', 'station_code', 'quality'], axis=1)
     
     return df
@@ -279,6 +279,11 @@ def import_obs_slh_data():
     coord_df['Average'] = coord_df.mean(axis=1)
     coord_df = coord_df.T
     
+    
+    # Save tide gauge stations coordinates
+    save_csv_data(coord_df, 'observations', 'Coordinates', 'tgstations')
+    
+    
     for stat in stations:
         dt = tg_data_df[stat]
 
@@ -338,6 +343,8 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
         
         # Create list of wind dataframes 
         lst = [] # List containing the created dataframes
+        coord_df_np = pd.DataFrame({'station':stations[:-1], 'lat':'', 'lon':''})
+        coord_df_np = coord_df_np.set_index('station')
         
         # Loop over the tide gauge stations
         for index, row in coord_df.iterrows():
@@ -346,11 +353,16 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
                                                                       lat = row.lat, method = 'nearest').to_series().dropna(), 
                                          'v$^2$' : dataset_annual.v2.sel(lon = row.lon, 
                                                                       lat = row.lat, method = 'nearest').to_series().dropna()}))
+            coord_df_np['lat'][index] = dataset_annual.sel(lon = row.lon, lat = row.lat, method = 'nearest').lat.values
+            coord_df_np['lon'][index] = dataset_annual.sel(lon = row.lon, lat = row.lat, method = 'nearest').lon.values
+            
             lst[-1] = lst[-1].set_index('time')
 
             annual_df = pd.concat(lst, axis=1, keys = stations[:-1])
 
-
+        # Save NearestPoint data coordinates
+        save_csv_data(coord_df_np, 'observations', 'Coordinates', f'np_{data_type}')
+        
         data_u = new_df_obs_wind_per_var(annual_df, variable  = 'u$^2$', model = 'NearestPoint')
         data_v = new_df_obs_wind_per_var(annual_df, variable  = 'v$^2$', model = 'NearestPoint')
 

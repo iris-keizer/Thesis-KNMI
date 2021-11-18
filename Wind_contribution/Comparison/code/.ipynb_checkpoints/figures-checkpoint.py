@@ -513,13 +513,106 @@ def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, 
     plt.axhline(color='k', linestyle='-', linewidth = 0.3)
     plt.axvline(color='k', linestyle='-', linewidth = 0.3)
     plt.grid()
-
     
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/coefs_{wind_model}')
     
     
+def plot_comp_r2_results_one_station(results_era5, results_20cr, results_hist, station, wind_model):
+    markers = ['v', '^', '<', '>']
     
     
+    plt.figure()
+    
+    
+    plt.scatter(results_era5['R$^2$'][station], 
+                results_era5['R$^2_{wind}$'][station], 
+                label = '', marker='x',color='k', s=80)
+        
+    plt.scatter(results_20cr['R$^2$'][station], 
+                results_20cr['R$^2_{wind}$'][station], 
+                label = '', marker='+',color='k', s=100)
+        
+    for idx, model in enumerate(results_hist.model.values):
+                
+                
+        plt.scatter(results_hist.r2.sel(station=station, model = model).values, 
+                    results_hist.r2_wind.sel(station=station, model = model).values, 
+                    marker = markers[int((3.6*idx)/36)], alpha=.8)
+                
+        plt.xlabel('R$^2$ [-]')
+        plt.ylabel('R$^2_{wind}$ [-]')  
+             
+    plt.title(f'wind regression model = {wind_model}')
+    plt.xlim(-0.05,1.0)
+    plt.ylim(-0.05,1.0)
+    labels = ['era5','20cr'] + list(results_hist.model.values)
+    plt.legend(labels=labels, ncol=3, bbox_to_anchor=(1.1, 1))
+    plt.axhline(color='k', linestyle='-', linewidth = 0.3)
+    plt.axvline(color='k', linestyle='-', linewidth = 0.3)
+    plt.grid()
+
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/r2_{wind_model}')    
+
+    
+def plot_comp_r2_uv_results_one_station(results_era5, results_20cr, results_hist, station, wind_model):
+    markers = ['v', '^', '<', '>']
+    
+    
+    plt.figure()
+    
+    if wind_model == 'NearestPoint' or wind_model == 'Timmerman':
+        plt.scatter(results_era5['R$^2_{u^2}$'][station], 
+                    results_era5['R$^2_{v^2}$'][station], 
+                    label = '', marker='x',color='k', s=80)
+
+        plt.scatter(results_20cr['R$^2_{u^2}$'][station], 
+                    results_20cr['R$^2_{v^2}$'][station], 
+                    label = '', marker='+',color='k', s=100)
+
+        for idx, model in enumerate(results_hist.model.values):
+
+
+            plt.scatter(results_hist.r2_u2.sel(station=station, model = model).values, 
+                        results_hist.r2_v2.sel(station=station, model = model).values, 
+                        marker = markers[int((3.6*idx)/36)], alpha=.8)
+
+            plt.xlabel('R$^2_{u^2}$ [-]')
+            plt.ylabel('R$^2_{v^2}$ [-]')  
+            
+            
+    elif wind_model == 'Dangendorf':
+        plt.scatter(results_era5['R$^2_{neg}$'][station], 
+                    results_era5['R$^2_{pos}$'][station], 
+                    label = '', marker='x',color='k', s=80)
+
+        plt.scatter(results_20cr['R$^2_{neg}$'][station], 
+                    results_20cr['R$^2_{pos}$'][station], 
+                    label = '', marker='+',color='k', s=100)
+
+        for idx, model in enumerate(results_hist.model.values):
+
+
+            plt.scatter(results_hist.r2_neg.sel(station=station, model = model).values, 
+                        results_hist.r2_pos.sel(station=station, model = model).values, 
+                        marker = markers[int((3.6*idx)/36)], alpha=.8)
+
+            plt.xlabel('R$^2_{neg}$ [-]')
+            plt.ylabel('R$^2_{pos}$ [-]')  
+        
+                
+                
+    plt.title(f'wind regression model = {wind_model}')
+    plt.xlim(-0.05,1.0)
+    plt.ylim(-0.05,1.0)
+    labels = ['era5','20cr'] + list(results_hist.model.values)
+    plt.legend(labels=labels, ncol=3, bbox_to_anchor=(1.1, 1))
+    plt.axhline(color='k', linestyle='-', linewidth = 0.3)
+    plt.axvline(color='k', linestyle='-', linewidth = 0.3)
+    plt.grid()
+
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/r2_{wind_model}')   
     
 def plot_obs_sine_fits(data_lst, fits_dfs, label_lst, labels):
     station = 'Average'

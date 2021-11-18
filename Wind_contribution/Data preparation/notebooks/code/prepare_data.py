@@ -123,8 +123,12 @@ def prep_tg_data_obs():
                                   '.rlrdata', sep=';', header=None, names=names_col)
             tg_data = tg_data.drop(['interpolated', 'flags'], 1)
             tg_data = tg_data.set_index('time')
-            tg_data.height = tg_data.height.where(~np.isclose(tg_data.height,-99999))
-            tg_data.height = tg_data.height - tg_data.height.mean()
+            
+            # Data before 1890 is incorrect
+            tg_data = tg_data[tg_data.index>=1890] 
+            
+            # Calculate anomalies over whole period
+            tg_data.height = tg_data.height - tg_data.height.mean() 
 
             if i==0:
                 tg_data_df = pd.DataFrame(data=dict(time=tg_data.index, col_name=tg_data.height))
@@ -139,12 +143,9 @@ def prep_tg_data_obs():
                               "24": stations[3], "25": stations[4],
                               "32": stations[5]})
 
-    tg_data_df = tg_data_df.interpolate(method='slinear')
+    #tg_data_df = tg_data_df.interpolate(method='slinear') # Interpolate in case of any nan values (but there are not)
     tg_data_df['Average'] = tg_data_df.mean(axis=1) # Add column containing the average of the stations 
     tg_data_df = tg_data_df*0.1 # mm -> cm
-    
-    # Data before 1890 is incorrect
-    tg_data_df = tg_data_df[tg_data_df.index>=1890] 
     
     
     # Create xarray dataset

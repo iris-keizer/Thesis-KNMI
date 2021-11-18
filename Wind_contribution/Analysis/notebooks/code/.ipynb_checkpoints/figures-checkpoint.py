@@ -394,6 +394,23 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/{time_period}_trends_per_station_{model}.png')
     
 
+def plot_np_locations(data_type):
+    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Coordinates/'
+    tg_coords = pd.read_csv(path+'tgstations.csv', index_col='station')
+    np_coords = pd.read_csv(path+f'np_{data_type}.csv', index_col='station')
+    
+    
+    
+    
+    return tg_coords, np_coords
+    
+    
+    
+
+    
+    
+    
+    
     
 
 """
