@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 
+from scipy.signal import detrend
 
 
 """
@@ -249,22 +250,8 @@ def import_reg_results(output, data_type):
         np = xr.open_dataset(path+f'{output}_NearestPoint_{data_type}.nc')
         tim = xr.open_dataset(path+f'{output}_Timmerman_{data_type}.nc')
         dang = xr.open_dataset(path+f'{output}_Dangendorf_{data_type}.nc')
+
         
-        
-        # Only keep models that occur in all outputs
-        np = np.where(np.model.isin(dang.model), drop=True)
-        dang = dang.where(dang.model.isin(np.model), drop=True)
-
-
-        tim = tim.where(tim.model.isin(dang.model), drop=True)
-        dang = dang.where(dang.model.isin(tim.model), drop=True)
-
-
-        np = np.where(np.model.isin(tim.model), drop=True)
-        tim = tim.where(tim.model.isin(np.model), drop=True)
-
-
-
     return np, tim, dang
 
 
@@ -273,3 +260,107 @@ def import_reg_results(output, data_type):
 
 
 
+"""
+MODEL SELECTION
+---------------
+
+"""
+
+
+def detrend_dim(da, dim, deg=1): 
+    """
+    Function that detrends the data from a dataarray along a single dimension
+    deg=1 for linear fit
+    
+    """
+    
+    p = da.polyfit(dim=dim, deg=deg)
+    coord = da[dim] - da[dim].values[0]
+    trend = coord*p.polyfit_coefficients.sel(degree=1)
+    return da - trend
+
+
+
+
+
+
+
+def import_data_model_selection():
+    
+    
+    # Import 20CR observations
+    
+    
+    # Define path
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/'
+    
+    # Import the files
+    np = pd.read_csv(path+f'timeseries_NearestPoint_20cr.csv', header = [0,1,2])
+    tim = pd.read_csv(path+f'timeseries_Timmerman_20cr.csv', header = [0,1,2])
+    dang = pd.read_csv(path+f'timeseries_Dangendorf_20cr.csv', header = [0,1,2])
+    
+    # Set index
+    np = np.set_index(('Unnamed: 0_level_0', 'Unnamed: 0_level_1', 'time'))
+    tim = tim.set_index(('Unnamed: 0_level_0', 'Unnamed: 0_level_1', 'time'))
+    dang = dang.set_index(('Unnamed: 0_level_0', 'Unnamed: 0_level_1', 'time'))
+        
+    # Set index name
+    np.index.names = ['time']
+    tim.index.names = ['time']
+    dang.index.names = ['time']
+            
+            
+    # Drop extra row
+    np = np.droplevel(axis=1, level=2)
+    tim = tim.droplevel(axis=1, level=2)
+    dang = dang.droplevel(axis=1, level=2)
+            
+    
+    # Create one dataframe only containing 'Average' station and wind contribution to SLH
+    # whereof the data is detrended
+    df = pd.DataFrame({'time': np.index.values, 
+                       'NearestPoint': detrend(np['Average', 'wind total']),
+                       'Timmerman': detrend(tim['Average', 'wind total']), 
+                       'Dangendorf': detrend(dang['Average', 'wind total'])})
+
+
+    detrended_timeseries_20cr = df.set_index('time')
+    
+    
+    # Import CMIP
+    
+    # Define path
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/'
+
+
+    # Import the files
+    np = xr.open_dataset(path+f'timeseries_NearestPoint_historical.nc')
+    tim = xr.open_dataset(path+f'timeseries_Timmerman_historical.nc')
+    dang = xr.open_dataset(path+f'timeseries_Dangendorf_historical.nc')
+        
+    # Select data and create dataframe
+    np = np.wind_total.sel(station='Average', drop = True)
+    tim = tim.wind_total.sel(station='Average', drop = True)
+    dang = dang.wind_total.sel(station='Average', drop = True)
+
+    # Detrend data
+    np = detrend_dim(np, 'time')
+    tim = detrend_dim(tim, 'time')
+    dang = detrend_dim(dang, 'time')
+    
+    # Create dataframe
+    np = np.to_pandas().T
+    tim = tim.to_pandas().T
+    dang = dang.to_pandas().T
+    
+    detrended_timeseries_cmip6 = pd.concat([np, tim, dang], axis = 1,  keys = ['NearestPoint', 'Timmerman', 'Dangendorf'])
+
+    # Create data of equal time span
+    detrended_timeseries_20cr = detrended_timeseries_20cr[
+        detrended_timeseries_20cr.index.isin(detrended_timeseries_cmip6.index.values)]
+    
+    detrended_timeseries_cmip6 = detrended_timeseries_cmip6[
+        detrended_timeseries_cmip6.index.isin(detrended_timeseries_20cr.index.values)]
+    
+    
+    return detrended_timeseries_20cr, detrended_timeseries_cmip6

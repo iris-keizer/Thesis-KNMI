@@ -136,12 +136,6 @@ def plot_comp_20cr_cmip6(data_20cr, data_cmip6, time_bandwidth = 1.4, show_spec 
     
     """
     
-    
-    # Create data of equal time span
-    data_20cr = data_20cr[data_20cr.index.isin(data_cmip6.index.values)]
-    data_cmip6 = data_cmip6[data_cmip6.index.isin(data_20cr.index.values)]
-    
-    
     # Calculate total and partial variance of observations
     df_obs = pd.DataFrame({'variable':['total variance', 'total auc', 'partial auc'], 'NearestPoint':'',
                            'Timmerman':'','Dangendorf':''})
@@ -160,31 +154,34 @@ def plot_comp_20cr_cmip6(data_20cr, data_cmip6, time_bandwidth = 1.4, show_spec 
         df_obs[label]['partial auc'] = auc(freq[i_start:i_end], spec[i_start:i_end]) # Calculate partial variance
 
     
+    
     # Calculate total and partial variance of models
     
     dfs = []
-    for model in models:
-        
-        df = pd.DataFrame({'variable':['total variance', 'total auc', 'partial auc'], 'NearestPoint':'', 
-                           'Timmerman':'','Dangendorf':''})
+
+    for label in labels_windmodel:
+
+        df = pd.DataFrame({'variable':['total variance', 'total auc', 'partial auc']})
         df = df.set_index('variable')
 
-        for label in labels_windmodel:
-            df[label]['total variance'] = data_cmip6[model, label].var() # Calculate variance
+        for model in models:
+            df[model] = ''
 
-            spec, freq = mtspec(data_cmip6[model, label], 1.0, time_bandwidth) # Obtain spectra
+            df[model]['total variance'] = data_cmip6[label, model].var() # Calculate variance
 
-            df[label]['total auc'] = auc(freq, spec) # Calculate total area under curve
+            spec, freq = mtspec(data_cmip6[label, model], 1.0, time_bandwidth) # Obtain spectra
+
+            df[model]['total auc'] = auc(freq, spec) # Calculate total area under curve
 
             i_start = next(i for i,v in enumerate(freq) if v>=1/period_max)
             i_end = next(i for i,v in enumerate(freq) if v>1/period_min)
 
-            df[label]['partial auc'] = auc(freq[i_start:i_end], spec[i_start:i_end]) # Calculate partial variance
+            df[model]['partial auc'] = auc(freq[i_start:i_end], spec[i_start:i_end]) # Calculate partial variance
 
         dfs.append(df)
 
-    df_cmip6 = pd.concat(dfs, axis=1, keys = models)
-    
+    df_cmip6 = pd.concat(dfs, axis=1, keys = labels_windmodel)
+
     
     # Obtain a dataframe of the best models
     best_models = get_best_models(df_obs, df_cmip6)
@@ -204,7 +201,7 @@ def plot_comp_20cr_cmip6(data_20cr, data_cmip6, time_bandwidth = 1.4, show_spec 
         ax.scatter(df_obs[labels_windmodel[i]]['partial auc'], df_obs[labels_windmodel[i]]['total auc'], marker = 'x', s=70, c='k')
         
         for j, model in enumerate(best_models.index.values):
-            ax.scatter(df_cmip6[model, labels_windmodel[i]]['partial auc'], df_cmip6[model, labels_windmodel[i]]['total auc'],
+            ax.scatter(df_cmip6[labels_windmodel[i], model]['partial auc'], df_cmip6[labels_windmodel[i], model]['total auc'],
                   marker = markers[int((3.6*j)/36)], s=25, alpha = .8)
             
         ax.set_ylim(-0.2,13.1)
@@ -218,7 +215,7 @@ def plot_comp_20cr_cmip6(data_20cr, data_cmip6, time_bandwidth = 1.4, show_spec 
     labels = ['20cr'] + list(best_models.index.values)
     plt.legend(labels = labels,ncol=2, bbox_to_anchor=(2.4, 2.8))
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/tot_part_auc')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/model selection/tot_part_auc')
     
     
     # Plot the 20cr spectra and for n_cmip6 model spectra
@@ -247,12 +244,12 @@ def plot_comp_20cr_cmip6(data_20cr, data_cmip6, time_bandwidth = 1.4, show_spec 
             
             else:
                 model = best_models.index.values[i-1]
-                spec, freq, conf_int, f_stat, n_freedom = mtspec(data_cmip6[model, labels_windmodel[j]], 1.0, time_bandwidth, 
+                spec, freq, conf_int, f_stat, n_freedom = mtspec(data_cmip6[labels_windmodel[j], model], 1.0, time_bandwidth, 
                                                                  statistics = True)
 
-                var = round(df_cmip6[model, labels_windmodel[j]]['total variance'],2)
-                tot_auc = round(df_cmip6[model, labels_windmodel[j]]['total auc'],2)
-                part_auc = round(df_cmip6[model, labels_windmodel[j]]['partial auc'],2)
+                var = round(df_cmip6[labels_windmodel[j], model]['total variance'],2)
+                tot_auc = round(df_cmip6[labels_windmodel[j], model]['total auc'],2)
+                part_auc = round(df_cmip6[labels_windmodel[j], model]['partial auc'],2)
                 
                 ax.set_title(f'{model} - {labels_windmodel[j]} - ({data_cmip6.index[0]}-{data_cmip6.index[-1]}) \n total var={var} - '+
                              f'total auc={tot_auc} - partial auc={part_auc} \n time_bandwidth = {time_bandwidth}')
@@ -277,12 +274,10 @@ def plot_comp_20cr_cmip6(data_20cr, data_cmip6, time_bandwidth = 1.4, show_spec 
 
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/spectra_20cr_cmip6_{n_cmip6}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/model selection/spectra_20cr_cmip6_{n_cmip6}')
     
     
     return best_models
-
-
 
 
 
@@ -297,11 +292,13 @@ def get_best_models(df_obs, df_cmip6):
     
     for model in models:
         for label in labels_windmodel:
-            df[label][model] = np.sqrt((df_cmip6[model, label]['total auc']-df_obs[label]['total auc'])**2 + 
-                                       (df_cmip6[model, label]['partial auc']-df_obs[label]['partial auc'])**2) # Calculate Euclidian distance
+            df[label][model] = np.sqrt((df_cmip6[label, model]['total auc']-df_obs[label]['total auc'])**2 + 
+                                       (df_cmip6[label, model]['partial auc']-df_obs[label]['partial auc'])**2) # Calculate Euclidian distance
     
     df['Average'] = df.mean(axis=1)
     
     return df.sort_values('Average')
+
+
 
 

@@ -19,7 +19,8 @@ import xarray as xr
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
+from mtspec.multitaper import mtspec
+from sklearn.metrics import auc
 
 """
 Practical functions

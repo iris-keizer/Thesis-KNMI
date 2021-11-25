@@ -19,6 +19,7 @@ import xarray as xr
 
 
 
+
 """
 Practical functions
 -------------------
@@ -249,23 +250,34 @@ def import_reg_results(output, data_type):
         np = xr.open_dataset(path+f'{output}_NearestPoint_{data_type}.nc')
         tim = xr.open_dataset(path+f'{output}_Timmerman_{data_type}.nc')
         dang = xr.open_dataset(path+f'{output}_Dangendorf_{data_type}.nc')
+
         
-        
-        # Only keep models that occur in all outputs
-        np = np.where(np.model.isin(dang.model), drop=True)
-        dang = dang.where(dang.model.isin(np.model), drop=True)
-
-
-        tim = tim.where(tim.model.isin(dang.model), drop=True)
-        dang = dang.where(dang.model.isin(tim.model), drop=True)
-
-
-        np = np.where(np.model.isin(tim.model), drop=True)
-        tim = tim.where(tim.model.isin(np.model), drop=True)
-
-
-
     return np, tim, dang
+
+
+
+
+
+
+
+"""
+MODEL SELECTION
+---------------
+
+"""
+
+
+def detrend_dim(da, dim, deg=1): 
+    """
+    Function that detrends the data from a dataarray along a single dimension
+    deg=1 for linear fit
+    
+    """
+    
+    p = da.polyfit(dim=dim, deg=deg)
+    coord = da[dim] - da[dim].values[0]
+    trend = coord*p.polyfit_coefficients.sel(degree=1)
+    return da - trend
 
 
 
