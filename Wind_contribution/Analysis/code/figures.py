@@ -14,7 +14,9 @@ These functions are used in the notebooks:
 import pandas as pd
 import xarray as xr
 import numpy as np
+
 import matplotlib.pyplot as plt
+
 from scipy.stats import linregress
 
 

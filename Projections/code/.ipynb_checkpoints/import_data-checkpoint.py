@@ -61,8 +61,7 @@ def station_coords():
     col_names = ['id', 'lat', 'lon', 'station', 'coastline_code', 'station_code', 'quality']
     
     # Create dataframe
-    df = pd.read_csv(path_locations, sep=';', header=None, names=col_names)
-    df = df.set_index('id')
+    df = pd.read_csv(path_locations, sep=';', header=None, names=col_names, index_col='id')
     df = df.loc[loc_num, :]
     df['station'] = stations[:-1]
     df = df.set_index('station')
@@ -234,6 +233,46 @@ def import_cmip6_slh_data(data_type = 'historical'):
     return zos
 
 
+def import_cmip6_wind_contribution_data(wind_model = 'NearestPoint', data_type = 'historical'):
+    """
+    Function that imports cmip6 wind contribution the sea level rise resulting from the regressions
+    
+    For wind_model choose ['NearestPoint', 'Timmerman', 'Dangendorf']
+    
+    """
+    
+    
+    # Define paths to data
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/timeseries_{wind_model}_{data_type}.nc'
+
+    # Open data file
+    wcontr = xr.open_dataset(path) 
+
+    # Only select the average station
+    wcontr = wcontr.sel(station='Average', drop = True)
+    
+    return wcontr
+
+
+
+def import_cmip6_wind_contribution_data_preproj(wind_model = 'NearestPoint', data_type = 'historical'):
+    """
+    Function that imports cmip6 wind contribution the sea level rise resulting from the regressions
+    
+    For wind_model choose ['NearestPoint', 'Timmerman', 'Dangendorf']
+    
+    """
+    
+    
+    # Define paths to data
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/Projections/NearestPoint_wc_timeseries.csv'
+
+    # Open data file
+    wcontr = pd.read_csv(path, index_col='time')
+    
+    return wcontr
+
+
 
 
 def cmip6_get_nearest_point(data):
@@ -376,6 +415,25 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
 
 
 
+def import_cmip6_regression_results(wind_model = 'NearestPoint', data_type = 'historical'):
+    """
+    Function that imports cmip6 wind contribution the sea level rise resulting from the regressions
+    
+    For wind_model choose ['NearestPoint', 'Timmerman', 'Dangendorf']
+    
+    """
+    
+    
+    # Define paths to data
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/results_{wind_model}_{data_type}.nc'
+
+    # Open data file
+    results = xr.open_dataset(path) 
+
+    # Only select the average station
+    results = results.sel(station='Average', drop = True)
+    
+    return results.to_pandas().T
 
 
 

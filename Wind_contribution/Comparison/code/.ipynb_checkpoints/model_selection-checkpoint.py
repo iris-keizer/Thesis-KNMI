@@ -42,6 +42,7 @@ models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'BCC-ESM1',
        'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR', 'MIROC-ES2L', 'MIROC6',
        'MPI-ESM-1-2-HAM', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
        'NESM3', 'NorCPM1', 'UKESM1-0-LL']
+
 labels_windmodel = ['NearestPoint', 'Timmerman', 'Dangendorf']
     
 
@@ -422,6 +423,10 @@ def plot_best_models(best_models, timeseries_cmip6):
                                   return_sorted = False)
                     ax.plot(data.index, lws)
                 ax.set_title(best_models[n_row*i+j])
+                if i == n_row-1:
+                    ax.set_xlabel('time [y]')
+                if j == 0:
+                    ax.set_ylabel('Wind contribution to SLH [cm]')
                 plt.tight_layout()
                 
             if i == 0 and j == 0:
