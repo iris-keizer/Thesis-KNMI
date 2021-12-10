@@ -13,6 +13,7 @@ Projection.ipynb
 # Import necessary packages
 import math
 
+import numpy as np
 import pandas as pd
 
 import statsmodels.api as sm
@@ -27,7 +28,7 @@ wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
 
 
 
-def plot_zos_per_scenario(scenarios, labels, smoothed = False, window = 21,
+def plot_zos_per_scenario(scenarios, labels, names, smoothed = False, window = 21,
                          hist_start = 1950):
     '''
     Function to plot the zos data for all models per scenario. 
@@ -100,7 +101,7 @@ def plot_zos_per_scenario(scenarios, labels, smoothed = False, window = 21,
                         else:
                             ax.plot(scenario.index.values, scenario[model].values, color = colors[k], label = model)
 
-                ax.set_title(f'historical and ' + labels[n_col*i+j])
+                ax.set_title(f'historical and ' + names[n_col*i+j])
                 if j == 0:
                     ax.set_ylabel(f'zos [cm]')
                 ax.set_xlim(hist_start, 2101)
@@ -127,7 +128,7 @@ def plot_zos_per_scenario(scenarios, labels, smoothed = False, window = 21,
     
         
 
-def plot_zos_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950):
+def plot_zos_med_percentiles_per_scenarios(scenarios, labels, names, lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950):
     '''
     Function to make a plot of zos of the median and upper and lower bound of the models for each scenario.
     Define the percentiles by setting the lower_bound and upper_bound and 
@@ -179,7 +180,7 @@ def plot_zos_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05
                     ax.set_xlabel('time [y]')
                 if j == 0:
                     ax.set_ylabel('zos [cm]')
-                ax.set_title(f'historical and {labels[n_col*i+j]}')
+                ax.set_title(f'historical and {names[n_col*i+j]}')
                 ax.set_xlim(hist_start, 2101)
                 ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
@@ -195,7 +196,7 @@ def plot_zos_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05
     
     
     
-def plot_wind_per_scenario(scenarios, labels, direction = 'Zonal', smoothed = False, window = 21, 
+def plot_wind_per_scenario(scenarios, labels, names, direction = 'Zonal', smoothed = False, window = 21, 
                            hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to plot the wind data per scenario by calling the functions make_wind_dfs and plot_wind
@@ -205,22 +206,22 @@ def plot_wind_per_scenario(scenarios, labels, direction = 'Zonal', smoothed = Fa
         u2, v2 = make_wind_dfs(scenarios, labels, wind_model)
     
         # Plot zonal wind stress
-        plot_wind_projections(u2, labels, smoothed = smoothed, window = window, 
+        plot_wind_projections(u2, labels, names, smoothed = smoothed, window = window, 
                            hist_start = hist_start, wind_model = wind_model)
         
         # Plot meridional wind stress
-        plot_wind_projections(v2, labels, direction = 'Meridional', smoothed = smoothed, window = window, 
+        plot_wind_projections(v2, labels, names, direction = 'Meridional', smoothed = smoothed, window = window, 
                            hist_start = hist_start, wind_model = wind_model)
         
     elif wind_model == 'Dangendorf':
         neg, pos = make_wind_dfs(scenarios, labels, wind_model)
         
         # Plot negative proxy
-        plot_wind_projections(neg, labels, direction = 'Negative', smoothed = smoothed, window = window, 
+        plot_wind_projections(neg, labels, names, direction = 'Negative', smoothed = smoothed, window = window, 
                            hist_start = hist_start, wind_model = wind_model)
         
         # Plot positive proxy
-        plot_wind_projections(pos, labels, direction = 'Positive', smoothed = smoothed, window = window, 
+        plot_wind_projections(pos, labels, names, direction = 'Positive', smoothed = smoothed, window = window, 
                            hist_start = hist_start, wind_model = wind_model)
         
         
@@ -277,7 +278,7 @@ def make_wind_dfs(scenarios, labels, wind_model):
     
     
     
-def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = False, window = 21, 
+def plot_wind_projections(scenarios, labels, names, direction = 'Zonal', smoothed = False, window = 21, 
                            hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to plot the wind data for all models per scenario. 
@@ -372,7 +373,7 @@ def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = Fal
                         else:
                             ax.plot(scenario.index.values, scenario[model].values, color = colors[k], label = model)
                             
-                ax.set_title(f'historical and ' + labels[n_col*i+j])
+                ax.set_title(f'historical and ' + names[n_col*i+j])
                 if not wind_model == 'Dangendorf':
                     ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
                 ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
@@ -403,7 +404,7 @@ def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = Fal
         
         
         
-def plot_wind_med_percentiles_per_scenario(scenarios, labels, direction = 'Zonal', 
+def plot_wind_med_percentiles_per_scenario(scenarios, labels, names, direction = 'Zonal', 
                                            lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950,
                                            wind_model = 'NearestPoint'):
     '''
@@ -414,22 +415,22 @@ def plot_wind_med_percentiles_per_scenario(scenarios, labels, direction = 'Zonal
         u2, v2 = make_wind_dfs(scenarios, labels, wind_model)
     
         # Plot zonal wind stress
-        plot_wind_med_percentiles(u2, labels, lower_bound = lower_bound, upper_bound = upper_bound, ra = ra, hist_start = hist_start,
+        plot_wind_med_percentiles(u2, labels, names, lower_bound = lower_bound, upper_bound = upper_bound, ra = ra, hist_start = hist_start,
                                  wind_model = wind_model)
         
         # Plot meridional wind stress
-        plot_wind_med_percentiles(v2, labels, direction = 'Meridional', lower_bound = lower_bound, upper_bound = upper_bound, 
+        plot_wind_med_percentiles(v2, labels, names, direction = 'Meridional', lower_bound = lower_bound, upper_bound = upper_bound, 
                                   ra = ra, hist_start = hist_start, wind_model = wind_model)
         
     elif wind_model == 'Dangendorf':
         neg, pos = make_wind_dfs(scenarios, labels, wind_model)
         
         # Plot negative proxy
-        plot_wind_med_percentiles(neg, labels, direction = 'Negative', lower_bound = lower_bound, upper_bound = upper_bound, 
+        plot_wind_med_percentiles(neg, labels, names, direction = 'Negative', lower_bound = lower_bound, upper_bound = upper_bound, 
                                   ra = ra, hist_start = hist_start, wind_model = wind_model)
         
         # Plot positive proxy
-        plot_wind_med_percentiles(pos, labels, direction = 'Positive', lower_bound = lower_bound, upper_bound = upper_bound, 
+        plot_wind_med_percentiles(pos, labels, names, direction = 'Positive', lower_bound = lower_bound, upper_bound = upper_bound, 
                                   ra = ra, hist_start = hist_start, wind_model = wind_model)
         
         
@@ -439,7 +440,7 @@ def plot_wind_med_percentiles_per_scenario(scenarios, labels, direction = 'Zonal
         
 
 
-def plot_wind_med_percentiles(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950, 
+def plot_wind_med_percentiles(scenarios, labels, names, lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950, 
                               wind_model = 'NearestPoint', direction = 'Zonal'):
     '''
     Function to make a plot of wind stress of the median and upper and lower bound of the models for each scenario.
@@ -506,7 +507,7 @@ def plot_wind_med_percentiles(scenarios, labels, lower_bound = 0.05, upper_bound
                         ax.set_ylabel(f'{direction} pressure proxy [Pa]')
                     else:
                         ax.set_ylabel(f'{direction} wind stress [m$^2$/s$^2$]')
-                ax.set_title(f'historical and {labels[n_col*i+j]}')
+                ax.set_title(f'historical and {names[n_col*i+j]}')
                 ax.set_xlim(hist_start, 2101)
                 ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
@@ -525,7 +526,7 @@ def plot_wind_med_percentiles(scenarios, labels, lower_bound = 0.05, upper_bound
         
         
 
-def plot_projections_per_scenario(scenarios, labels, smoothed = False, window = 21, 
+def plot_projections_per_scenario(scenarios, labels, names, smoothed = False, window = 21, 
                                   hist_start = 1950, wind_model = 'NearestPoint', 
                                   ylabel = 'Wind contribution to sea level [cm]'):
     """
@@ -596,7 +597,7 @@ def plot_projections_per_scenario(scenarios, labels, smoothed = False, window = 
                         else:
                             ax.plot(scenario.index.values, scenario[model].values, color = colors[k], label = model)
                             
-                ax.set_title('historical and ' + labels[n_col*i+j])
+                ax.set_title('historical and ' + names[n_col*i+j])
                 if j == 0:
                     ax.set_ylabel(ylabel)
                 ax.set_xlim(hist_start, 2101)
@@ -620,7 +621,7 @@ def plot_projections_per_scenario(scenarios, labels, smoothed = False, window = 
         
         
     
-def plot_projections_per_scenario_all_wind_models(scenarios, labels, smoothed = False, window = 21, 
+def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoothed = False, window = 21, 
                                   hist_start = 1950):
     """
     Function to plot all models per scenario and for all wind models
@@ -684,7 +685,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, smoothed = 
             insert = ''
             if smoothed == True:
                 insert = f'\n lowess window = {window}'
-            ax.set_title(f'{wind_labels[j]} - historical and {labels[i]}{insert}')
+            ax.set_title(f'{wind_labels[j]} - historical and {names[i]}{insert}')
             if j == 0:
                 ax.set_ylabel('Wind contribution to sea level [cm]')
             ax.set_xlim(hist_start, 2101)
@@ -711,7 +712,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, smoothed = 
        
         
 
-def plot_med_percentiles_scenarios(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5, 
+def plot_med_percentiles_scenarios(scenarios, labels, names, lower_bound = 0.05, upper_bound = 0.95, ra = 5, 
                                    hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario.
@@ -730,8 +731,8 @@ def plot_med_percentiles_scenarios(scenarios, labels, lower_bound = 0.05, upper_
         lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
         ub = scenario.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
 
-        plt.fill_between(ub.index, ub, lb, alpha=0.3, label=f'{labels[i]}, {int(lower_bound*100)}-{int(upper_bound*100)} percentiles')
-        plt.plot(med, label=f'{labels[i]} median')
+        plt.fill_between(ub.index, ub, lb, alpha=0.3, label=f'{names[i]}, {int(lower_bound*100)}-{int(upper_bound*100)} percentiles')
+        plt.plot(med, label=f'{names[i]} median')
     
     
     plt.xlim(hist_start, 2101)
@@ -748,7 +749,7 @@ def plot_med_percentiles_scenarios(scenarios, labels, lower_bound = 0.05, upper_
 
 
     
-def plot_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5
+def plot_med_percentiles_per_scenarios(scenarios, labels, names, lower_bound = 0.05, upper_bound = 0.95, ra = 5
                                        , hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario.
@@ -802,7 +803,7 @@ def plot_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05, up
                     ax.set_xlabel('time [y]')
                 if j == 0:
                     ax.set_ylabel('Wind contribution to sea level [cm]')
-                ax.set_title(f'historical and {labels[n_col*i+j]}')
+                ax.set_title(f'historical and {names[n_col*i+j]}')
                 ax.set_xlim(hist_start, 2101)
                 if wind_model != 'Dangendorf':
                     ax.set_ylim(y_min, y_max)
@@ -818,7 +819,7 @@ def plot_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05, up
 
 
 
-def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_historical, lower_bound = 0.05, upper_bound = 0.95, 
+def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names, wc_historical, lower_bound = 0.05, upper_bound = 0.95, 
                                                        ra = 5, hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario.
@@ -924,7 +925,7 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_his
                 
                 ax.set_xlabel('time [y]')
                 ax.set_ylabel('Wind contribution to sea level [cm]')
-                ax.set_title(f'historical and  {labels[n_col*i+j]}\n median and {int(lower_bound*100)}-{int(upper_bound*100)} percentiles')
+                ax.set_title(f'historical and  {names[n_col*i+j]}\n median and {int(lower_bound*100)}-{int(upper_bound*100)} percentiles')
                 ax.set_xlim(hist_start, 2101)
                 ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
@@ -936,7 +937,7 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_his
 
 
 
-def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5
+def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names, lower_bound = 0.05, upper_bound = 0.95, ra = 5
                                        , hist_start = 1950):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario and all three wind models
@@ -991,9 +992,213 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, lower_
             ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
             if j == 0:
                 ax.legend(loc='upper left')
-            ax.set_title(f'{wind_labels[j]} - historical and {labels[i]} \n running average = {ra}')
+            ax.set_title(f'{wind_labels[j]} - historical and {names[i]} \n running average = {ra}')
             plt.tight_layout()
             
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/median_percentiles_per scenario_all_wm_{hist_start}')
 
 
+
+    
+    
+    
+def make_percentile_df(scenarios, labels, names, percentiles = [5, 17, 50, 83, 95], year_s = 2000.5, year_e = 2100.5):
+    '''
+    Function to create a dataframe of the percentiles for the results of all wind models and different scenarios
+    
+    '''
+    wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
+    
+    p_labels = []
+    for p in percentiles:
+        p_labels.append(f' Percentile: {p} ')
+    
+    lst = []
+    for scenarios_wm in scenarios:
+        
+        df = pd.DataFrame(columns = p_labels)
+        df['scenario'] = names
+        df = df.set_index('scenario')
+        
+        for j, p in enumerate(percentiles):
+            for i, scenario in enumerate(scenarios_wm):
+                df[p_labels[j]][names[i]] = round(scenario.loc[year_s:year_e].mean(axis=0).quantile(p/100),1)
+        
+        lst.append(df)
+        
+    df = pd.concat(lst, keys = wind_labels, axis=1)
+    return df  
+    
+    
+    
+    
+    
+def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=False):
+    '''
+    Function to make a plot of the sea-level change due to atmospheric contribution over a certain period.
+    
+    Stolen from: https://github.com/dlebars/CMIP_SeaLevel/blob/master/notebooks/plot_zostoga.ipynb
+    
+    df: a dataframe should be given including the scenarios as index and different percentiles as columns
+    
+    wind_model: define the to be plotted wind model
+    '''
+    mi = 0.6 # Max color intensity
+    
+    # Get some pastel shades for the colors
+    if not(colors):
+        colors = plt.cm.Oranges(np.linspace(0, mi, len(df.index)))
+        rowColours = colors
+        
+        # Expand the array
+        ones = np.ones(len(df.columns))
+        colors = colors[np.newaxis,:,:] * ones[:, np.newaxis, np.newaxis]
+        
+    elif colors=='alternate':
+        colors1 = plt.cm.Oranges(np.linspace(0, mi, len(df.index)))
+        colors2 = plt.cm.Blues(np.linspace(0, mi, len(df.index)))
+        colors = np.zeros([len(df.columns), len(df.index), 4])
+        colors[::2] = colors1
+        colors[1::2] = colors2
+        
+        rowColours = plt.cm.Greys(np.linspace(0, mi, len(df.index)))
+
+    # Start from white color
+    colors[:,0,:] = 0
+    
+    index = np.arange(len(df.columns))
+    bar_width = 0.6
+
+    # Initialize the vertical-offset for the stacked bar chart.
+    y_offset = np.zeros(len(df.columns))
+    
+    fig, ax = plt.subplots()
+    
+    # Plot bars and create text labels for the table
+    cell_text = []
+    for row in range(len(df.index)):
+        ax.bar(index, 
+               df.iloc[row]-y_offset, 
+               bar_width, 
+               bottom=y_offset, 
+               color=colors[:,row,:])
+        
+        y_offset = df.iloc[row]
+        cell_text.append(['%1.1f' % x for x in df.iloc[row]])
+    
+    ax.set_xlim(-0.5,index[-1]+0.5)
+    ax.set_ylim(-0.3, 0.6)
+    
+    # Add a table at the bottom of the axes
+    ax.table(cellText=cell_text[::-1],
+             rowLabels=df.index[::-1],
+             rowColours=rowColours[::-1],
+             colColours=colors[:,2,:],
+             colLabels=df.columns,
+             loc='bottom')
+    
+
+    ax.set_xticks([])
+    ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
+    ax.set_ylabel('Atmospheric contribution\n to sea-level change [cm]')
+    ax.set_title(wind_model)
+    
+    
+    if vlines:
+        xcoords = index[:-1]+0.5
+        xcoords = xcoords[::2]
+        for xc in xcoords:
+            plt.axvline(x=xc, color='black', linewidth=0.5, linestyle='--')
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_{wind_model}')
+    
+    
+ 
+
+
+def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False):
+    
+    wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
+    
+    mi = 0.6 # Max color intensity
+    
+    df = dfs[wind_labels[0]].T
+    
+    # Get some pastel shades for the colors
+    if not(colors):
+        colors = plt.cm.Oranges(np.linspace(0, mi, len(df.index)))
+        rowColours = colors
+        
+        # Expand the array
+        ones = np.ones(len(df.columns))
+        colors = colors[np.newaxis,:,:] * ones[:, np.newaxis, np.newaxis]
+        
+    elif colors=='alternate':
+        colors1 = plt.cm.Oranges(np.linspace(0, mi, len(df.index)))
+        colors2 = plt.cm.Blues(np.linspace(0, mi, len(df.index)))
+        colors = np.zeros([len(df.columns), len(df.index), 4])
+        colors[::2] = colors1
+        colors[1::2] = colors2
+        
+        rowColours = plt.cm.Greys(np.linspace(0, mi, len(df.index)))
+
+    # Start from white color
+    colors[:,0,:] = 0
+    
+    index = np.arange(len(df.columns))
+    bar_width = 0.6
+
+    # Initialize the vertical-offset for the stacked bar chart.
+    y_offset = np.zeros(len(df.columns))
+    
+    fig, axs = plt.subplots(1, 3, figsize=(15, 4))
+    
+    for i, wl in enumerate(wind_labels):
+        df = dfs[wl].T
+        ax = axs[i]
+        
+        # Plot bars and create text labels for the table
+        cell_text = []
+        for row in range(len(df.index)):
+            ax.bar(index, 
+                   df.iloc[row]-y_offset, 
+                   bar_width, 
+                   bottom=y_offset, 
+                   color=colors[:,row,:])
+
+            y_offset = df.iloc[row]
+            cell_text.append(['%1.1f' % x for x in df.iloc[row]])
+
+        ax.set_xlim(-0.5,index[-1]+0.5)
+        ax.set_ylim(-0.3, 0.5)
+
+        # Add a table at the bottom of the axes
+        if i == 0:
+            ax.table(cellText=cell_text[::-1],
+                     rowLabels=df.index[::-1],
+                     rowColours=rowColours[::-1],
+                     colColours=colors[:,2,:],
+                     colLabels=df.columns,
+                     loc='bottom')
+            
+        else:
+            ax.table(cellText=cell_text[::-1],
+                     colColours=colors[:,2,:],
+                     colLabels=df.columns,
+                     loc='bottom')
+
+        
+        ax.set_xticks([])
+        ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
+
+        if vlines:
+            xcoords = index[:-1]+0.5
+            xcoords = xcoords[::2]
+            for xc in xcoords:
+                plt.axvline(x=xc, color='black', linewidth=0.5, linestyle='--')
+                
+        if i == 0:      
+            ax.set_ylabel('Change of atmospheric contribution \n to sea-level [cm] \n 2001-2100 ')
+        ax.set_title(wl)
+
+    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models')
