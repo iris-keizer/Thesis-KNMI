@@ -13,9 +13,12 @@ nearby_wind_regression_cmip6_historical.ipynb
 
 # Import necessary packages
 import copy
+import pickle
+
 import numpy as np
 import xarray as xr
 import pandas as pd
+
 from sklearn.linear_model import LinearRegression as linr
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
@@ -316,13 +319,16 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
 
 
 
-def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 'historical'):
+def regression_cmip6(wind_data, zos, wind_model = 'NearestPoint', data_type = 'historical'):
     """
     Function to perform the regression between the cmip6 sea level and wind data
     
     For wind_model choose ['NearestPoint', 'Timmerman', 'Dangendorf']
     """
-
+    
+    # Perform regression with zos data untill 1980, thereafter zos accelerates
+    zos = zos.where(zos.time <= 1980, drop=True)
+    
     
     # Add trend column to wind dataframe
     trend_lst = copy.deepcopy(wind_data.time.values)
@@ -333,11 +339,15 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
     regg_names, wind_names =  regression_names(wind_model)
     
     
-    
     # Create lists to save datasets
     timeseries_lst1 = []
     reg_results_lst = []
     signif_ds_lst = []
+    
+    
+    # Create dataframe for scales of standardization
+    scalers = {}
+    
     
     # Perform regression for each model
     for model in wind_data.model.values:
@@ -364,8 +374,8 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
         
         # Perform regression for each station
         for idx, station in enumerate(stations):
-            y = pd.DataFrame(data={'time': tg_data.time.values,
-                                   'zos': tg_data.zos.sel(model=model, station=station).values})
+            y = pd.DataFrame(data={'time': zos.time.values,
+                                   'zos': zos.zos.sel(model=model, station=station).values})
             
             y = y.set_index('time')
             
@@ -390,17 +400,16 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
                     dfs.append(wind_data.sel(model=model, 
                                              tim_region=region, drop=True).to_dataframe())
 
-                    x = pd.concat(dfs, axis=1, keys=wind_data.tim_region.values)
+                x = pd.concat(dfs, axis=1, keys=wind_data.tim_region.values)
 
-                    x['trend'] = trend_lst
+                x['trend'] = trend_lst
 
                 # Define regression
                 tss = TimeSeriesSplit(n_splits=5)
                 regression_ = LassoCV(alphas=alphas, cv=tss, max_iter=10**(9))
                 
                 
-            
-
+                
             elif wind_model == 'Dangendorf':
 
 
@@ -421,13 +430,16 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
             y = y.dropna()
 
             
-            # Standardize x
+            # Standardize x and save scaler for projections
             scaler = StandardScaler()
+            if station == 'Average':
+                scalers[model] = scaler.fit(x)
+            
             x = copy.deepcopy(x)
             x.iloc[:,:] = scaler.fit_transform(x)
 
 
-            # Create copy such that regression result can be obtained for full timeseries
+            # Create copy such that regression result can be obtained for full time series
             x_timeseries = copy.deepcopy(x)
 
             
@@ -450,7 +462,6 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
             coef_lst.append(regression_.coef_.tolist())
             
             
-                
             
             # Calculate rmse
             yhat = regression_.predict(x)
@@ -631,6 +642,12 @@ def regression_cmip6(wind_data, tg_data, wind_model = 'NearestPoint', data_type 
     save_nc_data(results_dataset, 'cmip6', 'Regression results', f'results_{wind_model}_{data_type}')
     save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', f'timeseries_{wind_model}_{data_type}')
     save_nc_data(signif_dataset, 'cmip6', 'Regression results', f'significance_{wind_model}_{data_type}')    
+        
+    
+    # Save the scalers
+    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/scalers_{wind_model}.pkl', 'wb')
+    pickle.dump(scalers, file)
+    file.close()
         
     return(results_dataset, timeseries_dataset, signif_dataset)
 

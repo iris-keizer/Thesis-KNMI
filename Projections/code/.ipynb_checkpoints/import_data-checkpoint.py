@@ -197,6 +197,7 @@ models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'BCC-ESM1',
 
 
 
+
 """
 MODEL DATA
 ----------
@@ -204,31 +205,54 @@ MODEL DATA
 """
 
 
-def import_cmip6_slh_data(data_type = 'historical'):
+def import_cmip6_slh_data(data_type = 'historical', use_models = 'bestmodels'):
     """
     Function that imports cmip6 sea level data
     
     For data_type choose ['historical', 'piControl', 'ssp119', 'ssp126', 'ssp245' 'ssp370', 'ssp585']
     
+    For use_models choose ['bestmodels', 'allmodels']
+    
     """
     
     
-    # Define paths to data\
+    # Define paths to data
     path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/SLH/slh_annual_{data_type}.nc'
+    path_hist = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/SLH/slh_annual_historical.nc'
 
     # Open data file
     zos = xr.open_dataset(path) 
+    zos_hist = xr.open_dataset(path_hist)
+    
+    # Only use models as defined
+    if use_models == 'bestmodels':
+        # Import best models
+        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
+        models = []
 
+        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
+        # open file and read the content in a list
+        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
+            for line in filehandle:
+                # remove linebreak which is the last character of the string
+                currentPlace = line[:-1]
 
-    # Only use models occuring in both datasets
+                # add item to the list
+                models.append(currentPlace)
+    
     zos = zos.where(zos.model.isin(models), drop=True)
+    zos_hist = zos_hist.where(zos_hist.model.isin(models), drop=True)
     
     
     # For the cmip6 data the nodal and ibe shouldn't be removed
 
     
-    # Only select the average station
-    zos = zos.sel(station='Average', drop = True)
+    # Only select the average station and create dataframes
+    zos = zos.zos.sel(station='Average', drop = True).to_pandas().T
+    zos_hist = zos_hist.zos.sel(station='Average', drop = True).to_pandas().T
+    
+    # Create one dataframe
+    zos = pd.concat([zos_hist, zos]).dropna(axis=1)
     
     return zos
 
@@ -244,7 +268,7 @@ def import_cmip6_wind_contribution_data(wind_model = 'NearestPoint', data_type =
     
     # Define paths to data
     path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/timeseries_{wind_model}_{data_type}.nc'
-
+   
     # Open data file
     wcontr = xr.open_dataset(path) 
 
@@ -265,7 +289,7 @@ def import_cmip6_wind_contribution_data_preproj(wind_model = 'NearestPoint', dat
     
     
     # Define paths to data
-    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/Projections/NearestPoint_wc_timeseries.csv'
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/Projections/{wind_model}_wc_timeseries.csv'
 
     # Open data file
     wcontr = pd.read_csv(path, index_col='time')
@@ -328,7 +352,7 @@ def cmip6_get_nearest_point(data):
 
 
 
-def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
+def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'ssp119', use_models = 'bestmodels'):
     """
     Function that imports the observed wind data based on the preferred wind data model that is used for regression
     
@@ -337,6 +361,42 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
     
     """
     
+    
+    scenario = import_cmip6_wind_help(model, data_type)
+    hist = import_cmip6_wind_help(model, 'historical')
+    
+    # Only keep models occuring in both datasets
+    scenario = scenario.where(scenario.model.isin(hist.model), drop = True)
+    hist = hist.where(hist.model.isin(scenario.model), drop = True)
+    
+    data = xr.concat([hist, scenario], dim='time') # concatenate data sets
+    
+    
+    # Only use models as defined
+    if use_models == 'bestmodels':
+        # Import best models
+        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
+        models = []
+
+        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
+        # open file and read the content in a list
+        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
+            for line in filehandle:
+                # remove linebreak which is the last character of the string
+                currentPlace = line[:-1]
+
+                # add item to the list
+                models.append(currentPlace)
+                
+                
+    data = data.where(data.model.isin(models), drop=True)
+    
+                                  
+    return data
+
+
+
+def import_cmip6_wind_help(model = 'NearestPoint', data_type = 'historical'):
     
     path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/'
     
@@ -408,11 +468,19 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
     
     # Only use models occuring in both datasets
     dataset_annual = dataset_annual.where(dataset_annual.model.isin(models), drop=True)
-           
     
-        
+    
+    
     return dataset_annual
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 def import_cmip6_regression_results(wind_model = 'NearestPoint', data_type = 'historical'):

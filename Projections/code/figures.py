@@ -23,7 +23,11 @@ lowess = sm.nonparametric.lowess
 wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
 
 
-def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, window = 21,
+
+
+
+
+def plot_zos_per_scenario(scenarios, labels, smoothed = False, window = 21,
                          hist_start = 1950):
     '''
     Function to plot the zos data for all models per scenario. 
@@ -37,17 +41,8 @@ def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, w
     hist_start defines where the x-axis starts
     
     '''
-    # Turn datasets into dataframes
-    zos_historical = zos_historical.zos.to_pandas().T
     
-    new_scenarios = []
-    for scenario in scenarios:
-        new_scenarios.append(pd.concat([zos_historical, scenario.zos.to_pandas().T]).dropna(axis=1))
-    scenarios = new_scenarios
-
-    
-    
-    n_col = 3
+    n_col = 2
     n_row = math.ceil(len(scenarios) / n_col)
     n_delete = len(scenarios) % n_col
     
@@ -72,7 +67,7 @@ def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, w
         y_max = 37
             
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 6))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 3.5*n_row))
     
     
     for i in range(n_row):
@@ -80,14 +75,18 @@ def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, w
         for j in range(n_col):
             
             if i == n_row-1 and j in range(n_delete, n_col):
-                ax.legend(bbox_to_anchor=[2.02, 0.8], ncol=2)
+                ax.legend(bbox_to_anchor=[1.20, 0.8], ncol=2, prop={'size': 12})
             
-            ax = axs[i,j]
-
+            
+            if n_row > 1:
+                ax = axs[i,j]
+            else:
+                ax = axs[j]
+            
             if i == n_row-1 and j in range(n_delete, n_col):
                 fig.delaxes(axs[i,j])
-                
-                
+            
+            
             else:
                 scenario = scenarios[n_col*i+j]
                 for k, model in enumerate(models):
@@ -96,11 +95,11 @@ def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, w
                             frac = window/scenario[model].values.size
                             scenario_lowess = lowess(scenario[model].values, scenario.index.values, frac, return_sorted=False)
                             ax.plot(scenario.index.values, scenario_lowess, color = colors[k], label = model)
-                            
-                            
+
+
                         else:
                             ax.plot(scenario.index.values, scenario[model].values, color = colors[k], label = model)
-                            
+
                 ax.set_title(f'historical and ' + labels[n_col*i+j])
                 if j == 0:
                     ax.set_ylabel(f'zos [cm]')
@@ -110,10 +109,10 @@ def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, w
                 ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
                 ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
-                plt.tight_layout()
-            
-            
-    
+                
+
+
+
     if smoothed == False:         
         plt.savefig(
             f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_per_scenario_{hist_start}')
@@ -122,8 +121,13 @@ def plot_zos_per_scenario(scenarios, labels, zos_historical, smoothed = False, w
         plt.savefig(
             f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_per_scenario_smoothed_{hist_start}')
 
+     
+    
+    
+    
+        
 
-def plot_zos_med_percentiles_per_scenarios(scenarios, labels, historical, lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950):
+def plot_zos_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950):
     '''
     Function to make a plot of zos of the median and upper and lower bound of the models for each scenario.
     Define the percentiles by setting the lower_bound and upper_bound and 
@@ -136,30 +140,32 @@ def plot_zos_med_percentiles_per_scenarios(scenarios, labels, historical, lower_
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
     
     
-    n_col = 3
+    n_col = 2
     n_row = math.ceil(len(scenarios) / n_col)
     n_delete = len(scenarios) % n_col
     
     y_min = -10
     y_max = 35
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(20, 8))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 3.5*n_row))
     
     
     for i in range(n_row):
 
         for j in range(n_col):
             
-            ax = axs[i,j]
-
+            if n_row > 1:
+                ax = axs[i,j]
+            else:
+                ax = axs[j]
+            
             if i == n_row-1 and j in range(n_delete, n_col):
                 fig.delaxes(axs[i,j])
-                
+            
+              
                 
             else:
-                scenario = scenarios[n_col*i+j].zos.to_pandas().T
-                
-                scenario = pd.concat([historical.zos.to_pandas().T, scenario]).dropna(axis=1)
+                scenario = scenarios[n_col*i+j]
                 
                 med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
                 lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
@@ -179,31 +185,35 @@ def plot_zos_med_percentiles_per_scenarios(scenarios, labels, historical, lower_
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
                 ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
                 ax.legend(loc='upper left')
-                #plt.tight_layout()
+    #plt.tight_layout()
     
     
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_median_percentiles_per scenario_{hist_start}')
-    
 
-def plot_wind_per_scenario(scenarios, labels, wind_historical, direction = 'Zonal', smoothed = False, window = 21, 
+    
+    
+    
+    
+    
+def plot_wind_per_scenario(scenarios, labels, direction = 'Zonal', smoothed = False, window = 21, 
                            hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to plot the wind data per scenario by calling the functions make_wind_dfs and plot_wind
     '''
     
     if wind_model == 'NearestPoint' or wind_model == 'Timmerman':
-        u2, v2 = make_wind_dfs(scenarios, labels, wind_historical, wind_model)
+        u2, v2 = make_wind_dfs(scenarios, labels, wind_model)
     
         # Plot zonal wind stress
         plot_wind_projections(u2, labels, smoothed = smoothed, window = window, 
-                           hist_start = hist_start)
+                           hist_start = hist_start, wind_model = wind_model)
         
         # Plot meridional wind stress
         plot_wind_projections(v2, labels, direction = 'Meridional', smoothed = smoothed, window = window, 
-                           hist_start = hist_start)
+                           hist_start = hist_start, wind_model = wind_model)
         
     elif wind_model == 'Dangendorf':
-        neg, pos = make_wind_dfs(scenarios, labels, wind_historical, wind_model)
+        neg, pos = make_wind_dfs(scenarios, labels, wind_model)
         
         # Plot negative proxy
         plot_wind_projections(neg, labels, direction = 'Negative', smoothed = smoothed, window = window, 
@@ -217,7 +227,7 @@ def plot_wind_per_scenario(scenarios, labels, wind_historical, direction = 'Zona
     
     
     
-def make_wind_dfs(scenarios, labels, wind_historical, wind_model):
+def make_wind_dfs(scenarios, labels, wind_model):
     
     '''
     Function to pre-process the data (create list of dataframes) such that the wind per scenario over the 
@@ -225,48 +235,46 @@ def make_wind_dfs(scenarios, labels, wind_historical, wind_model):
     
     '''
     if wind_model == 'NearestPoint':
-        historical_u2 = wind_historical.u2.to_pandas().T
-        historical_v2 = wind_historical.v2.to_pandas().T
         
         # Create dataframes
         u2 = []
         v2 = []
         for scenario in scenarios:
-            u2.append(pd.concat([historical_u2, scenario.u2.to_pandas().T]).dropna(axis=1))
-            v2.append(pd.concat([historical_v2, scenario.v2.to_pandas().T]).dropna(axis=1))
+            u2.append(scenario.u2.to_pandas().T.dropna(axis=1))
+            v2.append(scenario.v2.to_pandas().T.dropna(axis=1))
     
         return u2, v2
     
     
     elif wind_model == 'Timmerman':
-        wind_historical = wind_historical.mean(dim = 'tim_region')
-        historical_u2 = wind_historical.u2.to_pandas().T
-        historical_v2 = wind_historical.v2.to_pandas().T
         
         # Create dataframes
         u2 = []
         v2 = []
         for scenario in scenarios:
             scenario = scenario.mean(dim = 'tim_region')
-            u2.append(pd.concat([historical_u2, scenario.u2.to_pandas().T]).dropna(axis=1))
-            v2.append(pd.concat([historical_v2, scenario.v2.to_pandas().T]).dropna(axis=1))
+            u2.append(scenario.u2.to_pandas().T.dropna(axis=1))
+            v2.append(scenario.v2.to_pandas().T.dropna(axis=1))
     
         return u2, v2
         
         
     elif wind_model == 'Dangendorf':
-        historical_neg = wind_historical['Negative corr region'].to_pandas().T
-        historical_pos = wind_historical['Positive corr region'].to_pandas().T
         
         # Create dataframes
         neg = []
         pos = []
         for scenario in scenarios:
-            neg.append(pd.concat([historical_neg, scenario['Negative corr region'].to_pandas().T]).dropna(axis=1))
-            pos.append(pd.concat([historical_pos, scenario['Positive corr region'].to_pandas().T]).dropna(axis=1))
+            neg.append(scenario['Negative corr region'].to_pandas().T.dropna(axis=1))
+            pos.append(scenario['Positive corr region'].to_pandas().T.dropna(axis=1))
     
         return neg, pos
         
+    
+    
+    
+    
+    
     
     
 def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = False, window = 21, 
@@ -287,7 +295,7 @@ def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = Fal
     '''
     
     
-    n_col = 3
+    n_col = 2
     n_row = math.ceil(len(scenarios) / n_col)
     n_delete = len(scenarios) % n_col
     
@@ -332,7 +340,7 @@ def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = Fal
             y_max = 98000
             
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 6))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 3.5*n_row))
     
     
     for i in range(n_row):
@@ -340,10 +348,13 @@ def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = Fal
         for j in range(n_col):
             
             if i == n_row-1 and j in range(n_delete, n_col):
-                ax.legend(bbox_to_anchor=[2.02, 0.8], ncol=2)
+                ax.legend(bbox_to_anchor=[1.20, 0.8], ncol=2, prop={'size': 12})
             
-            ax = axs[i,j]
-
+            if n_row > 1:
+                ax = axs[i,j]
+            else:
+                ax = axs[j]
+            
             if i == n_row-1 and j in range(n_delete, n_col):
                 fig.delaxes(axs[i,j])
                 
@@ -388,7 +399,11 @@ def plot_wind_projections(scenarios, labels, direction = 'Zonal', smoothed = Fal
 
 
 
-def plot_wind_med_percentiles_per_scenario(scenarios, labels, wind_historical, direction = 'Zonal', 
+        
+        
+        
+        
+def plot_wind_med_percentiles_per_scenario(scenarios, labels, direction = 'Zonal', 
                                            lower_bound = 0.05, upper_bound = 0.95, ra = 5, hist_start = 1950,
                                            wind_model = 'NearestPoint'):
     '''
@@ -396,7 +411,7 @@ def plot_wind_med_percentiles_per_scenario(scenarios, labels, wind_historical, d
     '''
     
     if wind_model == 'NearestPoint' or wind_model == 'Timmerman':
-        u2, v2 = make_wind_dfs(scenarios, labels, wind_historical, wind_model)
+        u2, v2 = make_wind_dfs(scenarios, labels, wind_model)
     
         # Plot zonal wind stress
         plot_wind_med_percentiles(u2, labels, lower_bound = lower_bound, upper_bound = upper_bound, ra = ra, hist_start = hist_start,
@@ -407,7 +422,7 @@ def plot_wind_med_percentiles_per_scenario(scenarios, labels, wind_historical, d
                                   ra = ra, hist_start = hist_start, wind_model = wind_model)
         
     elif wind_model == 'Dangendorf':
-        neg, pos = make_wind_dfs(scenarios, labels, wind_historical, wind_model)
+        neg, pos = make_wind_dfs(scenarios, labels, wind_model)
         
         # Plot negative proxy
         plot_wind_med_percentiles(neg, labels, direction = 'Negative', lower_bound = lower_bound, upper_bound = upper_bound, 
@@ -416,6 +431,10 @@ def plot_wind_med_percentiles_per_scenario(scenarios, labels, wind_historical, d
         # Plot positive proxy
         plot_wind_med_percentiles(pos, labels, direction = 'Positive', lower_bound = lower_bound, upper_bound = upper_bound, 
                                   ra = ra, hist_start = hist_start, wind_model = wind_model)
+        
+        
+        
+        
         
         
 
@@ -434,7 +453,7 @@ def plot_wind_med_percentiles(scenarios, labels, lower_bound = 0.05, upper_bound
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
     
     
-    n_col = 3
+    n_col = 2
     n_row = math.ceil(len(scenarios) / n_col)
     n_delete = len(scenarios) % n_col
     
@@ -453,18 +472,21 @@ def plot_wind_med_percentiles(scenarios, labels, lower_bound = 0.05, upper_bound
         y_max = 97350
     
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(20, 8))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 3.5*n_row))
     
     
     for i in range(n_row):
 
         for j in range(n_col):
             
-            ax = axs[i,j]
-
+            
+            if n_row > 1:
+                ax = axs[i,j]
+            else:
+                ax = axs[j]
+            
             if i == n_row-1 and j in range(n_delete, n_col):
                 fig.delaxes(axs[i,j])
-                
                 
             else:
                 scenario = scenarios[n_col*i+j]
@@ -497,8 +519,13 @@ def plot_wind_med_percentiles(scenarios, labels, lower_bound = 0.05, upper_bound
     
         
         
+        
+        
+        
+        
+        
 
-def plot_projections_per_scenario(scenarios, labels, wc_historical, smoothed = False, window = 21, 
+def plot_projections_per_scenario(scenarios, labels, smoothed = False, window = 21, 
                                   hist_start = 1950, wind_model = 'NearestPoint', 
                                   ylabel = 'Wind contribution to sea level [cm]'):
     """
@@ -511,7 +538,7 @@ def plot_projections_per_scenario(scenarios, labels, wc_historical, smoothed = F
     smoothed should be True if the smoothing should be applied
     """
     
-    n_col = 3
+    n_col = 2
     n_row = math.ceil(len(scenarios) / n_col)
     n_delete = len(scenarios) % n_col
     
@@ -525,36 +552,39 @@ def plot_projections_per_scenario(scenarios, labels, wc_historical, smoothed = F
             index = i
     models = scenarios[index].columns.values
     
-    colors = ['b', 'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
-              'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan', 'g', 'k']
+    colors = ['g', 'r', 'b', 'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+              'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
     
     if smoothed == True:
-        y_min = -4
-        y_max = 6.5
+        y_min = -1.5
+        y_max = 3
     else:
-        y_min = -7
-        y_max = 15
+        y_min = -5
+        y_max = 7.5
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 6))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 3.5*n_row))
     
     
     for i in range(n_row):
 
         for j in range(n_col):
             
-            if i == n_row-1 and j in range(n_delete, n_col):
-                ax.legend(bbox_to_anchor=[2.02, 0.8], ncol=2)
             
-            ax = axs[i,j]
-
             if i == n_row-1 and j in range(n_delete, n_col):
-                fig.delaxes(axs[i,j])
-                
+                ax.legend(bbox_to_anchor=[1.20, 0.8], ncol=2, prop={'size': 12})
+            
+             
+            if n_row > 1:
+                ax = axs[i,j]
+            else:
+                ax = axs[j]
+            
+            if i == n_row-1 and j in range(n_delete, n_col):
+                fig.delaxes(axs[i,j])  
                 
             else:
                 scenario = scenarios[n_col*i+j]
                 
-                scenario = pd.concat([wc_historical, scenario]).dropna(axis=1)
                 
                 for k, model in enumerate(models):
                     if model in scenario:
@@ -590,7 +620,7 @@ def plot_projections_per_scenario(scenarios, labels, wc_historical, smoothed = F
         
         
     
-def plot_projections_per_scenario_all_wind_models(scenarios, labels, wc_historical, smoothed = False, window = 21, 
+def plot_projections_per_scenario_all_wind_models(scenarios, labels, smoothed = False, window = 21, 
                                   hist_start = 1950):
     """
     Function to plot all models per scenario and for all wind models
@@ -623,14 +653,14 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, wc_historic
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan', 'g', 'k']
     
     if smoothed == True:
-        y_min = -2.5
+        y_min = -1
         y_max = 3.2
     else:
-        y_min = -7
-        y_max = 15
+        y_min = -5
+        y_max = 8
     
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 14))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 2.5*n_row))
     
     for i in range(n_row):
 
@@ -641,17 +671,16 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, wc_historic
 
             scenario = scenarios[j][i]
 
-            scenario = pd.concat([wc_historical[j], scenario]).dropna(axis=1)
 
             for k, model in enumerate(models):
                 if model in scenario:
                     if smoothed == True:
                         frac = window/scenario[model].values.size
                         scenario_lowess = lowess(scenario[model].values, scenario.index.values, frac, return_sorted=False)
-                        ax.plot(scenario.index.values, scenario_lowess, color = colors[k], label = model)
+                        ax.plot(scenario.index.values, scenario_lowess, label = model)
 
                     else:
-                        ax.plot(scenario.index.values, scenario[model].values, color = colors[k], label = model)
+                        ax.plot(scenario.index.values, scenario[model].values, label = model)
             insert = ''
             if smoothed == True:
                 insert = f'\n lowess window = {window}'
@@ -667,7 +696,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, wc_historic
             plt.tight_layout()
 
 
-    fig.legend(labels = models, loc="lower center", bbox_to_anchor=(0.5, -0.035), ncol=6)
+    fig.legend(labels = models, loc="lower center", bbox_to_anchor=(0.5, -0.09), ncol=6)
                 
     
     if smoothed == False:         
@@ -682,7 +711,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, wc_historic
        
         
 
-def plot_med_percentiles_scenarios(scenarios, labels, wc_historical, lower_bound = 0.05, upper_bound = 0.95, ra = 5, 
+def plot_med_percentiles_scenarios(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5, 
                                    hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario.
@@ -696,7 +725,6 @@ def plot_med_percentiles_scenarios(scenarios, labels, wc_historical, lower_bound
     
     
     for i, scenario in enumerate(scenarios):
-        scenario = pd.concat([wc_historical, scenario]).dropna(axis=1)
         
         med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
         lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
@@ -712,7 +740,7 @@ def plot_med_percentiles_scenarios(scenarios, labels, wc_historical, lower_bound
     plt.title(f'Compare wind contribution projections from scenarios \n'+
                   f'with running average of {ra} years')
     if wind_model != 'Dangendorf':
-        plt.ylim(-3.5, 4.5)
+        plt.ylim(-2.5,3.5)
     plt.grid(True)
     plt.legend(bbox_to_anchor=(1, 0.7))
     
@@ -720,7 +748,7 @@ def plot_med_percentiles_scenarios(scenarios, labels, wc_historical, lower_bound
 
 
     
-def plot_med_percentiles_per_scenarios(scenarios, labels, wc_historical, lower_bound = 0.05, upper_bound = 0.95, ra = 5
+def plot_med_percentiles_per_scenarios(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5
                                        , hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario.
@@ -734,22 +762,26 @@ def plot_med_percentiles_per_scenarios(scenarios, labels, wc_historical, lower_b
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
     
     
-    n_col = 3
+    n_col = 2
     n_row = math.ceil(len(scenarios) / n_col)
     n_delete = len(scenarios) % n_col
     
-    y_min = -7
-    y_max = 7
+    y_min = -2.2
+    y_max = 3
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(20, 8))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 3.5*n_row))
     
     
     for i in range(n_row):
 
         for j in range(n_col):
             
-            ax = axs[i,j]
-
+            
+            if n_row > 1:
+                ax = axs[i,j]
+            else:
+                ax = axs[j]
+            
             if i == n_row-1 and j in range(n_delete, n_col):
                 fig.delaxes(axs[i,j])
                 
@@ -757,7 +789,6 @@ def plot_med_percentiles_per_scenarios(scenarios, labels, wc_historical, lower_b
             else:
                 scenario = scenarios[n_col*i+j]
                 
-                scenario = pd.concat([wc_historical, scenario]).dropna(axis=1)
                 
                 med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
                 lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
@@ -905,7 +936,7 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_his
 
 
 
-def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_historical, lower_bound = 0.05, upper_bound = 0.95, ra = 5
+def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, lower_bound = 0.05, upper_bound = 0.95, ra = 5
                                        , hist_start = 1950):
     '''
     Function to make a plot of the median and upper and lower bound of the models for each scenario and all three wind models
@@ -930,7 +961,7 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_his
     y_min = -4
     y_max = 4
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 15))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 3.5*n_row))
     
     
     for i in range(n_row):
@@ -941,7 +972,6 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, wc_his
     
             scenario = scenarios[j][i]
                 
-            scenario = pd.concat([wc_historical[j], scenario]).dropna(axis=1)
                 
             med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
             lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
