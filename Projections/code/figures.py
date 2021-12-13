@@ -1113,10 +1113,11 @@ def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=F
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_{wind_model}')
     
     
- 
 
 
-def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False):
+
+def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False, period = '2001 - 2100', name = '2001_2100', 
+                                          ymin = -0.3, ymax=0.5):
     
     wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
     
@@ -1170,7 +1171,7 @@ def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False):
             cell_text.append(['%1.1f' % x for x in df.iloc[row]])
 
         ax.set_xlim(-0.5,index[-1]+0.5)
-        ax.set_ylim(-0.3, 0.5)
+        ax.set_ylim(ymin, ymax)
 
         # Add a table at the bottom of the axes
         if i == 0:
@@ -1198,7 +1199,7 @@ def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False):
                 plt.axvline(x=xc, color='black', linewidth=0.5, linestyle='--')
                 
         if i == 0:      
-            ax.set_ylabel('Change of atmospheric contribution \n to sea-level [cm] \n 2001-2100 ')
+            ax.set_ylabel(f'Change of atmospheric contribution \n to sea-level [cm] \n {period} ')
         ax.set_title(wl)
 
-    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models_{name}')
