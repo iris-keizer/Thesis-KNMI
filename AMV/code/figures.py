@@ -38,16 +38,19 @@ def plot_df_timeseries(data_df, ylabel = 'No label given', title = 'No title giv
     
     As an option, a lowess smoothing can be applied
     '''
+    
+    fsize = 12
+    
     plt.figure(figsize = (9,3))
     
     for column in data_df:
         plt.plot(data_df.index, data_df[column].values, label = column)
-        plt.title(f'{title}')
+        plt.title(f'{title}', fontsize = fsize)
         
     plt.xlim(1835, 2021)
     plt.legend(bbox_to_anchor=[1.04, 0.75])
-    plt.xlabel('time [y]')
-    plt.ylabel(f'{ylabel}')
+    plt.xlabel('time [y]', fontsize = fsize)
+    plt.ylabel(f'{ylabel}', fontsize = fsize)
     plt.axhline(color='k', linestyle='--', linewidth = 0.9)  
     plt.tight_layout()
     
@@ -58,6 +61,7 @@ def plot_era5_20cr_timeseries(data_era5, data_20cr, window = 21):
     '''
     Function to make a plot of both era5 and 20cr atmospheric contribution time series
     '''
+    fsize = 12
     
     colors = ['tab:blue', 'tab:orange', 'tab:green']
     
@@ -67,13 +71,13 @@ def plot_era5_20cr_timeseries(data_era5, data_20cr, window = 21):
         plt.plot(data_20cr.index, data_20cr[column], color = colors[i], label = column + ' - 20CR', alpha = 0.6)
         plt.plot(data_era5.index, data_era5[column], color = colors[i], label = column + ' - ERA5')
             
-        plt.title(f'Atmospheric contribution to mean sea-level')
+        plt.title(f'Atmospheric contribution to mean sea-level', fontsize = fsize)
             
             
     plt.xlim(1835, 2021)
     plt.legend(bbox_to_anchor=[1.04, 0.75])
-    plt.xlabel('time [y]')
-    plt.ylabel('sea-level contribution [cm]')
+    plt.xlabel('time [y]', fontsize = fsize)
+    plt.ylabel('sea-level contribution [cm]', fontsize = fsize)
     plt.axhline(color='k', linestyle='--', linewidth = 0.9)  
     plt.tight_layout()
     
@@ -87,7 +91,7 @@ def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.
     Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
     
     '''
-    
+    fsize = 12
     
     fig, axs = plt.subplots(3, 2, figsize = (15,8))
     
@@ -101,16 +105,16 @@ def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.
             ax.scatter(dataT.index, dataT[var].values)
         
         if i == 2:
-            ax.set_xlabel('lag [-]')
+            ax.set_xlabel('lag [y]', fontsize=fsize)
             
-        ax.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel, fontsize=fsize)
         ax.set_ylim(ymin, ymax)
         ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
         
         if i == 0:
-            ax.set_title(f'ERA5 \n {wind_labels[i]}')
+            ax.set_title(f'ERA5 \n {wind_labels[i]}', fontsize=fsize)
         else:
-            ax.set_title(wind_labels[i])
+            ax.set_title(wind_labels[i], fontsize=fsize)
         
         ax = axs[i,1]
         data_20cr = results_20cr.swaplevel(0,1, axis=1)[wm]
@@ -122,7 +126,7 @@ def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.
         ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
         
         if i == 2:
-            ax.set_xlabel('lag [-]')
+            ax.set_xlabel('lag [y]', fontsize=fsize)
         
         if i == 0:
             ax.legend(labels = AMV_names)
