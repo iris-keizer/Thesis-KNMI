@@ -15,9 +15,12 @@ lagged_regression_obs.ipynb
 import pandas as pd
 import xarray as xr
 
+import statsmodels.api as sm
+
+
 from scipy.signal import detrend
 
-
+AMV_names = ['HadISSTv2', 'ERSSTv5', 'COBE-SST2']
 
 """
 Practical functions
@@ -27,20 +30,24 @@ Practical functions
 """
 
 
-def station_names(): 
-    """
-    Function to obtain tide gauge station names as list
-    
-    """
-    return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
 
+
+def df_smooth(df, window):
+    df_lo = df.copy()
+    
+    for column in df:
+        frac = window/df[column].values.size
+        df_lo[column] = lowess(df[column].values, df.index.values, frac, return_sorted=False)
+        
+        
+    return df_lo
 
 
 
 # Declare global variables
-stations = station_names()
 wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
 
+lowess = sm.nonparametric.lowess
 
 """
 Import data
@@ -49,7 +56,7 @@ Import data
 
 """
 
-def import_obs_ac_slh_data():
+def import_obs_ac_slh_data(smoothed = False, window = 21):
     '''
     Function to import the atmospheric contribution to sea-level time series resulting from the regression between observational data
     
@@ -80,12 +87,17 @@ def import_obs_ac_slh_data():
     df_era5 = df_era5.apply(detrend)
     df_20cr = df_20cr.apply(detrend)
     
+    # apply lowess smoothing filter if smoothed = True
+    if smoothed == True:
+        df_era5 = df_smooth(df_era5, window)
+        df_20cr = df_smooth(df_20cr, window)
+    
     return df_era5, df_20cr
 
 
 
 
-def import_AMV_data():
+def import_AMV_data(smoothed = False, window = 21):
     '''
     Function to import the observational AMV data
     
@@ -116,4 +128,9 @@ def import_AMV_data():
     
     lst = [AMV_had['SST index'].to_pandas(), AMV_ersst['SST index'].to_pandas(), AMV_cobe['SST index'].to_pandas()]
     
-    return pd.concat(lst, keys = ['had', 'ersst', 'cobe'], axis=1)
+    AMV_data = pd.concat(lst, keys = AMV_names, axis=1)
+    
+    if smoothed == True:
+        AMV_data = df_smooth(AMV_data, window)
+    
+    return AMV_data

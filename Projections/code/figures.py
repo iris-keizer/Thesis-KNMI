@@ -635,7 +635,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoo
     smoothed should be True if the smoothing should be applied
     """
     
-    
+    fsize = 11
     
     n_col = 3
     n_row = len(scenarios[0])
@@ -685,20 +685,21 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoo
             insert = ''
             if smoothed == True:
                 insert = f'\n lowess window = {window}'
-            ax.set_title(f'{wind_labels[j]} - historical and {names[i]}{insert}')
+            insert = ''
+            ax.set_title(f'{wind_labels[j]} \n historical and {names[i]}{insert}', fontsize = fsize)
             if j == 0:
-                ax.set_ylabel('Wind contribution to sea level [cm]')
+                ax.set_ylabel('Atmospheric contribution to\n mean sea level [cm]', fontsize = fsize)
             ax.set_xlim(hist_start, 2101)
             if i == n_row - 1:
-                ax.set_xlabel('time [y]')
+                ax.set_xlabel('time [y]', fontsize = fsize)
             ax.set_ylim(y_min, y_max)
             ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
             ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
-            plt.tight_layout()
+            
 
 
     fig.legend(labels = models, loc="lower center", bbox_to_anchor=(0.5, -0.09), ncol=6)
-                
+    plt.tight_layout()           
     
     if smoothed == False:         
         plt.savefig(
@@ -828,6 +829,7 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
     
     '''
     
+    fsize = 14
     
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
@@ -923,15 +925,15 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
                 
                 
                 
-                ax.set_xlabel('time [y]')
-                ax.set_ylabel('Wind contribution to sea level [cm]')
-                ax.set_title(f'historical and  {names[n_col*i+j]}\n median and {int(lower_bound*100)}-{int(upper_bound*100)} percentiles')
+                ax.set_xlabel('time [y]', fontsize=fsize)
+                ax.set_ylabel('Atmospheric contribution to\n mean sea level [cm]', fontsize=fsize)
+                ax.set_title(f'historical and  {names[n_col*i+j]}\n median and {int(lower_bound*100)}-{int(upper_bound*100)} percentiles', fontsize=fsize)
                 ax.set_xlim(hist_start, 2101)
                 ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
                 ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
                 ax.legend(loc='upper left')
-                plt.tight_layout()
+    plt.tight_layout()
     
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_median_percentiles_per scenario_all_wind_models_{hist_start}')
 
@@ -954,7 +956,7 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
     
-    
+    fsize = 14
     
     n_col = 3
     n_row = len(scenarios[0])
@@ -983,16 +985,16 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
             ax.plot(med, color = colors[i], label=f'median')
                 
             if i == n_row - 1:
-                ax.set_xlabel('time [y]')
+                ax.set_xlabel('time [y]', fontsize = fsize)
             if j == 0:
-                ax.set_ylabel('Wind contribution to sea level [cm]')
+                ax.set_ylabel('Atmospheric contribution to \n mean sea level [cm]', fontsize = fsize)
             ax.set_xlim(hist_start, 2101)
             #ax.set_ylim(y_min, y_max)
             ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
             ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
             if j == 0:
                 ax.legend(loc='upper left')
-            ax.set_title(f'{wind_labels[j]} - historical and {names[i]} \n running average = {ra}')
+            ax.set_title(f'{wind_labels[j]} - historical and {names[i]} \n running average = {ra}', fontsize = fsize)
             plt.tight_layout()
             
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/median_percentiles_per scenario_all_wm_{hist_start}')
@@ -1199,7 +1201,7 @@ def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False, period
                 plt.axvline(x=xc, color='black', linewidth=0.5, linestyle='--')
                 
         if i == 0:      
-            ax.set_ylabel(f'Change of atmospheric contribution \n to sea-level [cm] \n {period} ')
+            ax.set_ylabel(f'Change of atmospheric contribution \n to mean sea-level [cm] \n {period} ', fontsize = 13)
         ax.set_title(wl)
-
+    #plt.tight_layout()
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models_{name}')

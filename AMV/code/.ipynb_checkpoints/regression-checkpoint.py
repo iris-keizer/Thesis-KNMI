@@ -50,13 +50,12 @@ def regression(data_x, data_y, lag):
     
     
     # Execute lagged regression by shifting the AMV dataframe. 
-    x = x_l.shift(lag) 
-    x = x.dropna()
+    x_l.index = x_l.index + lag
     
     
     # Create data series of equal time span
-    y = data_y[data_y.index.isin(x.index)]
-    x = x[x.index.isin(y.index)]
+    y = data_y[data_y.index.isin(x_l.index)]
+    x = x_l[x_l.index.isin(y.index)]
     
     
     # Fit the regression model
@@ -79,7 +78,7 @@ def regression(data_x, data_y, lag):
 
 def lagged_regression(data_x, data_y):
     
-    lags = np.arange(-40, 1)
+    lags = np.arange(0, 41)
     
     ts_lst1 = []
     r_lst1 = []
