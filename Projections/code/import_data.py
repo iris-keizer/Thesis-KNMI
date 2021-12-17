@@ -240,8 +240,8 @@ def import_cmip6_slh_data(data_type = 'historical', use_models = 'bestmodels'):
                 # add item to the list
                 models.append(currentPlace)
     
-    zos = zos.where(zos.model.isin(models), drop=True)
-    zos_hist = zos_hist.where(zos_hist.model.isin(models), drop=True)
+        zos = zos.where(zos.model.isin(models), drop=True)
+        zos_hist = zos_hist.where(zos_hist.model.isin(models), drop=True)
     
     
     # For the cmip6 data the nodal and ibe shouldn't be removed

@@ -19,6 +19,8 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
+from scipy.stats import linregress
+
 lowess = sm.nonparametric.lowess
 
 wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
@@ -1015,21 +1017,35 @@ def make_percentile_df(scenarios, labels, names, percentiles = [5, 17, 50, 83, 9
     for p in percentiles:
         p_labels.append(f' Percentile: {p} ')
     
+    df_med = pd.DataFrame(columns = wind_labels)
+    df_med['scenario'] = names
+    df_med = df_med.set_index('scenario')
+    
     lst = []
-    for scenarios_wm in scenarios:
+    for k, scenarios_wm in enumerate(scenarios):
         
         df = pd.DataFrame(columns = p_labels)
         df['scenario'] = names
         df = df.set_index('scenario')
         
-        for j, p in enumerate(percentiles):
-            for i, scenario in enumerate(scenarios_wm):
-                df[p_labels[j]][names[i]] = round(scenario.loc[year_s:year_e].mean(axis=0).quantile(p/100),1)
         
+        for i, scenario in enumerate(scenarios_wm):
+            df_trend = pd.DataFrame({'variable':['trend']})
+            df_trend = df_trend.set_index('variable')
+            for model in scenario:
+                df_trend[model] = linregress(scenario[model].loc[year_s:year_e].index,
+                                             scenario[model].loc[year_s:year_e].values).slope
+                
+            for j, p in enumerate(percentiles):
+                df[p_labels[j]][names[i]] = round(df_trend.quantile(p/100, axis=1).values[0],2)
+                
+            df_med[wind_labels[k]][names[i]] = round(df_trend.quantile(0.5, axis=1).values[0],2)
+                
         lst.append(df)
         
     df = pd.concat(lst, keys = wind_labels, axis=1)
-    return df  
+    
+    return df, df_med
     
     
     
@@ -1045,6 +1061,7 @@ def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=F
     
     wind_model: define the to be plotted wind model
     '''
+    
     mi = 0.6 # Max color intensity
     
     # Get some pastel shades for the colors
@@ -1086,10 +1103,11 @@ def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=F
                color=colors[:,row,:])
         
         y_offset = df.iloc[row]
-        cell_text.append(['%1.1f' % x for x in df.iloc[row]])
+        cell_text.append(['%1.2f' % x for x in df.iloc[row]])
+    
     
     ax.set_xlim(-0.5,index[-1]+0.5)
-    ax.set_ylim(-0.3, 0.6)
+    ax.set_ylim(-0.05, 0.05)
     
     # Add a table at the bottom of the axes
     ax.table(cellText=cell_text[::-1],
@@ -1097,13 +1115,13 @@ def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=F
              rowColours=rowColours[::-1],
              colColours=colors[:,2,:],
              colLabels=df.columns,
-             loc='bottom')
+             loc='bottom', fontsize = 12)
     
 
     ax.set_xticks([])
     ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
-    ax.set_ylabel('Atmospheric contribution\n to sea-level change [cm]')
-    ax.set_title(wind_model)
+    ax.set_ylabel('Atmospheric contribution\n to sea-level change [cm]', fontsize = 12)
+    ax.set_title(wind_model, fontsize = 12)
     
     
     if vlines:
@@ -1119,7 +1137,7 @@ def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=F
 
 
 def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False, period = '2001 - 2100', name = '2001_2100', 
-                                          ymin = -0.3, ymax=0.5):
+                                          ymin = -0.1, ymax=0.1):
     
     wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
     
@@ -1170,7 +1188,7 @@ def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False, period
                    color=colors[:,row,:])
 
             y_offset = df.iloc[row]
-            cell_text.append(['%1.1f' % x for x in df.iloc[row]])
+            cell_text.append(['%1.2f' % x for x in df.iloc[row]])
 
         ax.set_xlim(-0.5,index[-1]+0.5)
         ax.set_ylim(ymin, ymax)
@@ -1201,7 +1219,7 @@ def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False, period
                 plt.axvline(x=xc, color='black', linewidth=0.5, linestyle='--')
                 
         if i == 0:      
-            ax.set_ylabel(f'Change of atmospheric contribution \n to mean sea-level [cm] \n {period} ', fontsize = 12)
-        ax.set_title(wl)
+            ax.set_ylabel(f'Atmospheric contribution\n to sea-level change [cm] \n {period} ', fontsize = 12)
+        ax.set_title(wl, fontsize = 13)
     #plt.tight_layout()
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models_{name}')

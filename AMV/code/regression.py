@@ -112,3 +112,44 @@ def lagged_regression(data_x, data_y):
     results = pd.concat(r_lst1, axis=1, keys=AMV_names)
 
     return results, timeseries
+
+
+
+
+def lagged_regression_cmip6(data_x, data_y):
+    
+    
+    lags = np.arange(0, 41)
+    
+    ts_lst1 = []
+    r_lst1 = []
+    
+    for model in data_x.columns:
+        ts_lst0 = []
+        r_lst0 = []
+        
+        for wl in wind_labels:
+            df_timeseries = pd.DataFrame(columns = lags)
+            df_results = df_timeseries.copy()
+            df_timeseries['time'] = data_x.index
+            df_timeseries = df_timeseries.set_index('time')
+            
+            df_results['result'] = ['rmse', 'r$^2$', 'constant', 'coef']
+            df_results = df_results.set_index('result')
+            
+            for lag in lags:
+                
+                results, timeseries = regression(data_x[model], data_y[wl, model], lag)
+                df_timeseries[lag] = timeseries
+                df_results[lag] = results
+                
+            ts_lst0.append(df_timeseries)
+            r_lst0.append(df_results)
+        
+        ts_lst1.append(pd.concat(ts_lst0, axis=1, keys=wind_labels))
+        r_lst1.append(pd.concat(r_lst0, axis=1, keys=wind_labels))
+        
+    timeseries = pd.concat(ts_lst1, axis=1, keys=data_x.columns)
+    results = pd.concat(r_lst1, axis=1, keys=data_x.columns)
+
+    return results, timeseries

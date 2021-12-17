@@ -1,0 +1,73 @@
+
+
+def wind_contr_proj(wind_proj, wind_model = 'NearestPoint'):
+    '''
+    Function that creates a dataframe cointaining the projections into the 21st century using the regression
+    coefficients of the regression without trend. 
+    
+    '''
+    
+    # Import scalers for standardization
+    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/Projections/scalers_{wind_model}.pkl', "rb")
+    scalers = pickle.load(file)
+
+
+    df = pd.DataFrame({'time':wind_proj.time.values})
+    df = df.set_index('time')
+    
+    
+    for model in wind_proj.model.values:
+        
+        constant = results[model]['constant']
+        
+        if wm == 'NearestPoint':
+        
+            u2_coef = results[model]['u$^2$']
+            v2_coef = results[model]['v$^2$']
+
+            df['u2_data'] = wind_proj.u2.sel(model=model, drop=True).values
+            df['v2_data'] = wind_proj.v2.sel(model=model, drop=True).values
+            
+            # Standardize dataframe
+            df.iloc[:,:] = scalers[model].fit_transform(df)
+            
+            wind_contr = constant + (u2_coef * df['u2_data']) + (v2_coef * df['v2_data'])
+            
+            df = df.drop(['u2_data', 'v2_data'], axis=1)
+            
+        elif wm == 'Timmerman':
+            
+            wind_contr = constant
+            
+            for region in wind_proj.tim_region.values:
+                u2_coef = results[model][f'{region} u$^2$']
+                v2_coef = results[model][f'{region} u$^2$']
+                
+                df['u2_data'] = wind_proj.u2.sel(model=model, tim_region = region, drop=True).values
+                df['v2_data'] = wind_proj.v2.sel(model=model, tim_region = region, drop=True).values
+                
+                # Standardize dataframe
+                df.iloc[:,:] = scalers[model].fit_transform(df)
+                
+                wind_contr += (u2_coef * df['u2_data']) + (v2_coef * df['v2_data'])
+                
+                df = df.drop(['u2_data', 'v2_data'], axis=1)
+                
+        elif wm == 'Dangendorf':
+        
+            neg_coef = results[model]['Negative corr region']
+            pos_coef = results[model]['Positive corr region']
+
+            df['neg_data'] = wind_proj['Negative corr region'].sel(model=model, drop=True).values
+            df['pos_data'] = wind_proj['Positive corr region'].sel(model=model, drop=True).values
+            
+            # Standardize dataframe
+            df.iloc[:,:] = scalers[model].fit_transform(df)
+            
+            wind_contr = constant + (neg_coef * df['neg_data']) + (pos_coef * df['pos_data'])
+            
+            df = df.drop(['neg_data', 'pos_data'], axis=1)
+            
+        df[model] = wind_contr
+        
+    return df

@@ -49,9 +49,14 @@ wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
 
 lowess = sm.nonparametric.lowess
 
+
+
+
+
+
 """
-Import data
-------------
+Import observational data
+-------------------------
 
 
 """
@@ -96,8 +101,7 @@ def import_obs_ac_slh_data(smoothed = False, window = 21):
 
 
 
-
-def import_AMV_data(smoothed = False, window = 21):
+def import_obs_AMV_data(smoothed = False, window = 21):
     '''
     Function to import the observational AMV data
     
@@ -134,3 +138,120 @@ def import_AMV_data(smoothed = False, window = 21):
         AMV_data = df_smooth(AMV_data, window)
     
     return AMV_data
+
+
+
+
+
+
+"""
+Import cmip6 data
+-----------------
+
+
+"""
+
+
+def import_cmip6_ac_slh_data(use_models = 'bestmodels', smoothed = False, window = 21):
+    '''
+    Function to import the atmospheric contribution to sea-level time series resulting from the regression between cmip6 data
+    
+    For use_models choose ['bestmodels', 'allmodels']
+    
+    '''
+    # Only use models as defined
+    if use_models == 'bestmodels':
+        # Import best models
+        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
+        models = []
+
+        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
+        # open file and read the content in a list
+        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
+            for line in filehandle:
+                # remove linebreak which is the last character of the string
+                currentPlace = line[:-1]
+
+                # add item to the list
+                models.append(currentPlace)
+    
+
+    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/'
+    
+    lst = []
+    
+    for wl in wind_labels:
+
+        # Import data
+        data = xr.open_dataset(path+f'timeseries_{wl}_historical.nc')
+
+        # Select atmospheric contribution, average station and preferred models
+        data = data.wind_total.sel(station = 'Average', drop=True)
+        
+        # Only use models as defined
+        if use_models == 'bestmodels':
+            data = data.where(data.model.isin(models), drop=True)
+
+        # Convert to dataframe
+        data = data.to_pandas().T
+
+        # Add to list
+        lst.append(data)
+    
+    data = pd.concat(lst, axis=1, keys = wind_labels)
+
+    
+    # detrend the dataframes
+    data = data.apply(detrend)
+    
+    
+    # apply lowess smoothing filter if smoothed = True
+    if smoothed == True:
+        data = df_smooth(data, window)
+    
+    return data
+
+
+def import_cmip6_AMV_data(use_models = 'bestmodels', smoothed = False, window = 21):
+    '''
+    Function to import the cmip6 AMV data
+    
+    For use_models choose ['bestmodels', 'allmodels']
+    
+    '''
+    
+    
+    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/AMV/amv_annual_historical.nc'
+    
+    # Import detrended data
+    data = xr.open_dataset(path)
+    
+    
+    # Only use models as defined
+    if use_models == 'bestmodels':
+        # Import best models
+        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
+        models = []
+
+        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
+        # open file and read the content in a list
+        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
+            for line in filehandle:
+                # remove linebreak which is the last character of the string
+                currentPlace = line[:-1]
+
+                # add item to the list
+                models.append(currentPlace)
+        
+        data = data.where(data.model.isin(models), drop=True)
+    
+    
+    # Create dataframe
+    data = data.amv.to_pandas().T
+    
+    
+    if smoothed == True:
+        data = df_smooth(data, window)
+    
+    return data
+
