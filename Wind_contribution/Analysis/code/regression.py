@@ -1,12 +1,16 @@
 """
-File containing the Python functions to perform a regression between sea level data and wind data 
+File containing the Python functions to perform a regression between sea level data and wind/pressure data 
 
 Author: Iris Keizer
 https://github.com/iris-keizer/Thesis-KNMI
 
 These functions are used in the notebooks:
-nearby_wind_regression_obs_era5.ipynb 
-nearby_wind_regression_cmip6_historical.ipynb 
+timmerman_regression_obs.ipynb
+timmerman_regression_cmip6.ipynb
+nearestpoint_regression_obs.ipynb
+nearestpoint_regression_cmip6.ipynb
+dangendorf_regression_obs.ipynb
+dangendorf_regression_cmip6.ipynb
 
 """
 
@@ -50,12 +54,22 @@ def station_names():
     return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
 
 
+
+
+
+
+
 def timmerman_region_names(): 
     """
     Function to obtain timmerman region names as list
     
     """
     return ['Channel', 'South', 'Mid-West', 'Mid-East', 'North-West', 'North-East']
+
+
+
+
+
 
 
 def save_nc_data(data, folder, variable, period, name): 
@@ -68,7 +82,11 @@ def save_nc_data(data, folder, variable, period, name):
     """
     data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{period}/{name}.nc", mode='w')
 
-    
+
+
+
+
+
 def save_csv_data(data, folder, variable, period, name): 
     """
     Function to save data as .csv file
@@ -80,6 +98,11 @@ def save_csv_data(data, folder, variable, period, name):
     data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{period}/{name}.csv")
 
     
+
+
+
+
+
     
 # Declare global variables
 stations = station_names()
@@ -724,6 +747,11 @@ USEFULL FUNCTIONS
 
 """
 
+
+
+
+
+
 def regression_names(model):
     
     if model == 'NearestPoint':
@@ -745,6 +773,11 @@ def significance_test(p, alpha):
     if p < alpha: return True
     else: return False
     
+
+
+
+
+
     
 def R2_var(df, y, var, regression_):
     """
@@ -763,6 +796,11 @@ def R2_var(df, y, var, regression_):
     score = regression_.score(x_wind,y)
     
     return score
+
+
+
+
+
 
 
 

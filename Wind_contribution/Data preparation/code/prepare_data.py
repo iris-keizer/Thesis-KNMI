@@ -33,10 +33,14 @@ Practical functions
 
 def station_names(): 
     """
-    Function to obtain tide gauge station names as list
+    Function to obtain tide gauge station names as a list
     
     """
     return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
+
+
+
+
 
 def station_coords(): 
     """
@@ -68,6 +72,7 @@ def save_nc_data(data, folder, variable, name):
     For folder choose ['observations', 'cmip6'], for variable choose ['Wind', 'SLH', 'Pressure', 'SST']
     
     """
+    
     data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc", mode='w')
     
     
@@ -78,10 +83,14 @@ def save_csv_data(data, folder, variable, name):
     For folder choose ['observations', 'cmip6'], for variable choose ['Wind', 'SLH', 'Pressure', 'SST']
     
     """
+    
     data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.csv")
 
 
+    
 stations = station_names()
+
+
 
 
 """
@@ -92,7 +101,7 @@ Functions to obtain annual averages of the data and make changes to the datasets
 be used for the analysis
 
 For wind data:
-- obtain wind stress variables (squaring and retaining sign)
+- obtain wind forcing variables (multiply by absolute value)
 
 
 """
@@ -272,6 +281,11 @@ def prep_wind_data_obs(data_type = 'era5'):
         
     return dataset_annual
         
+    
+    
+    
+    
+    
     
 def prep_pres_data_obs(data_type = 'era5'):
     """

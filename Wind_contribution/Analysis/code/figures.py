@@ -44,10 +44,11 @@ Practical functions
 
 def station_names(): 
     """
-    Function to obtain tide gauge station names as list
+    Function to obtain tide gauge station names as a list
     
     """
     return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
+
 
 
 def timmerman_region_names(): 
@@ -69,7 +70,9 @@ def get_savefig_path(data_type = 'observations',  wind_model =  'Nearest Point',
     For wind_model choose ['Nearest Point', 'Dangendorf', 'Timmerman']
     For wind_data_type choose ['era5', '20cr']
     """
+    
     path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/'
+    
     if data_type == 'comparison':
         path = path + f'{data_type}/'
     
@@ -112,6 +115,8 @@ def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     
     else: print('For model choose [NearestPoint, Timmerman]' )
 
+    
+    
     
 def get_decadal_trends_stds(data, time_period):
     """
@@ -231,12 +236,25 @@ many_colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', '
 fsize = 12
 
 
+
+
+
+
+
+
+
+
+
+
 """
 Creating figures
 ----------------
 
 
 """
+
+
+
 
 
 
@@ -624,6 +642,12 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/{time_period}_trends_per_station_{model}.png', bbox_inches='tight', dpi = 500)
     
 
+    
+    
+    
+    
+    
+    
 def plot_np_locations(title = True, period = 'fullperiod'):
     '''
     Function that plots a map of the Dutch coast indicating the locations of the tide gauge stations, reanalysis and cmip6 data
@@ -680,6 +704,12 @@ def plot_np_locations(title = True, period = 'fullperiod'):
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/np_data_locations.png', bbox_inches='tight', dpi = 500)
 
 
+    
+    
+    
+    
+    
+    
 
 
 def timmerman_regions_plot(title = True, period = 'fullperiod'):
@@ -717,6 +747,12 @@ def timmerman_regions_plot(title = True, period = 'fullperiod'):
 
 
 
+    
+    
+    
+    
+    
+    
 def dangendorf_regions_plot(pres_corr, tg_corr, data_type, title = True, year_start = 1950, year_final = 2015, period = 'fullperiod'):
     '''
     Function that plots a map of the North Atlantic region indicating the locations of the positive and negative correlation region
@@ -761,7 +797,13 @@ def dangendorf_regions_plot(pres_corr, tg_corr, data_type, title = True, year_st
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/dang_regions_{data_type}_{year_start}_{year_final}.png', bbox_inches='tight', dpi = 500)
 
     
+   
     
+    
+    
+    
+    
+     
     
 def dangendorf_all_stations_corr(pres_corr, tg_corr, data_type, year_start = 1950, year_final = 2015, period = 'fullperiod'):
     
@@ -822,6 +864,12 @@ def dangendorf_all_stations_corr(pres_corr, tg_corr, data_type, year_start = 195
 
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/Dangendorf/{data_type}/dangendorf_corr_all_stations_{year_start}_{year_final}', bbox_inches='tight', dpi = 500)
 
+    
+    
+    
+    
+    
+    
     
     
     
@@ -994,6 +1042,9 @@ def plot_zos_data_per_model_allstations(zos, data_type, period = 'fullperiod'):
 
 
 
+    
+    
+    
 
 def plot_cmip6_wind_data_per_model(data, wind_model, data_type, station = 'Average', tim_region = 'South', period = 'fullperiod'):
     """
@@ -1060,6 +1111,12 @@ def plot_cmip6_wind_data_per_model(data, wind_model, data_type, station = 'Avera
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_model}/wind_per_model_{data_type}.png', bbox_inches='tight')
 
 
+    
+    
+    
+    
+    
+    
 def plot_cmip6_pres_data(data, variable, model, data_type, period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 wind model data for each station
@@ -1075,6 +1132,12 @@ def plot_cmip6_pres_data(data, variable, model, data_type, period = 'fullperiod'
     plt.ylabel(f'ps [Pa]')
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{model}/{variable}_per_station_{data_type}.png', bbox_inches='tight')
      
+    
+    
+    
+    
+    
+    
 
     
 def plot_cmip6_two_variables(data, var1, var2, data_type, period = 'fullperiod'):
@@ -1088,6 +1151,12 @@ def plot_cmip6_two_variables(data, var1, var2, data_type, period = 'fullperiod')
     xr.plot.scatter(data, var1, var2, hue='model', col='station', col_wrap=3, sharex = False, figsize=(10,8))
     
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{var1}_{var2}_per_station_{data_type}.png', bbox_inches='tight')
+    
+    
+    
+    
+    
+    
     
     
     
@@ -1107,6 +1176,12 @@ def plot_cmip6_result_per_station(data, variable, data_type, period = 'fullperio
     
     
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{variable}_per_station_{data_type}.png', bbox_inches='tight')
+    
+    
+    
+    
+    
+    
     
     
 def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['wind_total'], period = 'fullperiod'):
@@ -1226,6 +1301,12 @@ def plot_cmip6_trends_timeseries_per_station_model_averages(zos, timeseries, var
     
     
 
+    
+    
+    
+    
+    
+    
 def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wind_reg_model, station = 'Average', period = 'fullperiod'):
     """
     

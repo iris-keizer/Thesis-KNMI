@@ -1,13 +1,18 @@
 """
-File containing the Python functions to import the correct data used for the regression between wind stress and sea level height along the Dutch coast. 
-Depending on the type of data, used wind model and whether observational or cmip6 data is used, the functions 
+File containing the Python functions to import the correct data used for the regression between wind/pressure and sea level height along the Dutch coast. 
+
+
 
 Author: Iris Keizer
 https://github.com/iris-keizer/Thesis-KNMI
 
 These functions are used in the notebooks:
-nearby_wind_regression_obs_era5.ipynb 
-nearby_wind_regression_cmip6_historical.ipynb 
+timmerman_regression_obs.ipynb
+timmerman_regression_cmip6.ipynb
+nearestpoint_regression_obs.ipynb
+nearestpoint_regression_cmip6.ipynb
+dangendorf_regression_obs.ipynb
+dangendorf_regression_cmip6.ipynb
 
 """
 
@@ -37,10 +42,15 @@ Practical functions
 
 def station_names(): 
     """
-    Function to obtain tide gauge station names as list
+    Function to obtain tide gauge station names as a list
     
     """
     return ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
+    
+    
+    
+    
+    
     
 def timmerman_region_names(): 
     """
@@ -75,6 +85,11 @@ def station_coords():
     return df
 
 
+    
+    
+    
+    
+    
 def cmip6_np_coords(): 
     """
     Function to obtain a dataframe containing the coordinates of cmip6 nearest points to tide gauge models
@@ -87,6 +102,11 @@ def cmip6_np_coords():
     return df
 
 
+    
+    
+    
+    
+    
 def obs_np_coords(data_type = 'era5'): 
     """
     Function to obtain a dataframe containing the coordinates of observed nearest points above sea to tide gauge models
@@ -104,6 +124,11 @@ def obs_np_coords(data_type = 'era5'):
     return df
 
 
+    
+    
+    
+    
+    
 def save_nc_data(data, folder, variable, name): 
     """
     Function to save data as NETCDF4 file
@@ -112,6 +137,11 @@ def save_nc_data(data, folder, variable, name):
     
     """
     data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc", mode='w')
+    
+    
+    
+    
+    
     
     
 def save_csv_data(data, folder, variable, name): 
@@ -124,6 +154,11 @@ def save_csv_data(data, folder, variable, name):
     data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.csv")
 
 
+    
+    
+    
+    
+    
 def timmerman_regions():
     """
     Function to obtain the timmerman regions 
@@ -154,6 +189,11 @@ def timmerman_regions():
     return Timmerman_regions
     
 
+    
+    
+    
+    
+    
 def nodal_tides_potential(lat, time_years):
     """
     Function to obtain the nodal cycle
@@ -167,6 +207,11 @@ def nodal_tides_potential(lat, time_years):
     nodcyc = A*np.cos((2*np.pi*(time_years-1922.7))/18.61 + np.pi)
     
     return nodcyc
+    
+    
+    
+    
+    
     
     
 # Get atmospheric proxies
@@ -202,6 +247,11 @@ def get_proxies(pres):
     return slp_mean
 
 
+    
+    
+    
+    
+    
 
 def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     """
@@ -235,7 +285,12 @@ def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     else: print('For model choose [NearestPoint, Timmerman]' )
 
         
-        
+     
+    
+    
+    
+    
+       
 def get_frac(window, data, dtype='DataFrame'):
     if dtype == 'DataFrame':
         frac = window / (data.index[-1]-data.index[0])
@@ -246,6 +301,11 @@ def get_frac(window, data, dtype='DataFrame'):
     return frac
 
 
+    
+    
+    
+    
+    
 
 def detrend_dim(da, dim, deg=1):
     '''
@@ -262,6 +322,11 @@ def detrend_dim(da, dim, deg=1):
 
 
     
+    
+    
+    
+    
+    
 # Declare global variables
 stations = station_names()
 regions = timmerman_region_names()
@@ -277,6 +342,21 @@ models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0',
        'MIROC-ES2L', 'MIROC6', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
        'NESM3', 'UKESM1-0-LL']
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 """
@@ -296,6 +376,11 @@ OBSERVATIONS
 
 """
 
+    
+    
+    
+    
+    
 def import_obs_slh_data(data_type = 'era5'):
     """
     Function that imports the tide gauge sea level height data as a pandas.dataframe
@@ -363,6 +448,11 @@ def import_obs_slh_data(data_type = 'era5'):
 
 
 
+    
+    
+    
+    
+    
 
 
 
@@ -537,6 +627,11 @@ MODEL DATA
 
 """
 
+    
+    
+    
+    
+    
 
 def import_cmip6_slh_data(data_type = 'historical'):
     """
@@ -564,6 +659,16 @@ def import_cmip6_slh_data(data_type = 'historical'):
     return zos
 
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 def cmip6_get_nearest_point(data):
