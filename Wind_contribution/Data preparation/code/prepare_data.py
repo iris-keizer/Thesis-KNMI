@@ -1,8 +1,9 @@
 """
-File containing the Python functions to load and prepare the data used for the regression between wind stress and sea level height along the Dutch coast. 
+File containing the Python functions to import and preprocess the data used for the regression between wind stress and sea level height along the Dutch coast. 
 
 Author: Iris Keizer
 https://github.com/iris-keizer/Thesis-KNMI
+
 
 These functions are used in the notebooks:
 prepare_obs.ipynb
