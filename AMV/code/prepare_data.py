@@ -107,3 +107,28 @@ def prep_amv_cmip6(data, data_type = 'historical'):
     
     
     return data
+
+def prep_amv_cmip6_simple(data, data_type = 'historical'):
+    '''
+    Function to prepare the cmip6 amv data.
+    '''
+    
+    # Select area
+    data = data.where(data.lat < 60, drop=True)
+    data = data.where(data.lon > -80, drop=True)
+    data = data.where(data.lon < 0, drop=True)
+    
+    # Average over this area
+    data = data.mean(dim=['lat', 'lon'])
+    
+    # Obtain anomalies
+    data = data - data.mean(dim='time')
+    
+    # Change name
+    data = data.rename({"tos":"amv"})
+    
+    # Save annual data as netcdf4           
+    save_nc_data(data.amv, 'cmip6', 'AMV', f'amv_simple_annual_{data_type}')  
+    
+    
+    return data

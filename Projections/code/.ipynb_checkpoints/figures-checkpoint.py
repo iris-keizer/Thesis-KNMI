@@ -30,7 +30,7 @@ wind_labels = ['NearestPoint', 'Timmerman', 'Dangendorf']
 
 
 
-def plot_zos_per_scenario(scenarios, labels, names, smoothed = False, window = 21,
+def plot_zos_per_scenario(scenarios, labels, names, smoothed = False, window = 31,
                          hist_start = 1950):
     '''
     Function to plot the zos data for all models per scenario. 
@@ -108,7 +108,7 @@ def plot_zos_per_scenario(scenarios, labels, names, smoothed = False, window = 2
                     ax.set_ylabel(f'zos [cm]')
                 ax.set_xlim(hist_start, 2101)
                 if i == n_row - 1:
-                    ax.set_xlabel('time [y]')
+                    ax.set_xlabel('time [yr]')
                 ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
                 ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
@@ -118,11 +118,11 @@ def plot_zos_per_scenario(scenarios, labels, names, smoothed = False, window = 2
 
     if smoothed == False:         
         plt.savefig(
-            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_per_scenario_{hist_start}')
+            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_per_scenario_{hist_start}', dpi = 500)
 
     else:
         plt.savefig(
-            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_per_scenario_smoothed_{hist_start}')
+            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_per_scenario_smoothed_{hist_start}', dpi = 500)
 
      
     
@@ -179,7 +179,7 @@ def plot_zos_med_percentiles_per_scenarios(scenarios, labels, names, lower_bound
                 ax.plot(med, color = colors[n_col*i+j], label=f'median')
                 
                 if i == n_row - 1:
-                    ax.set_xlabel('time [y]')
+                    ax.set_xlabel('time [yr]')
                 if j == 0:
                     ax.set_ylabel('zos [cm]')
                 ax.set_title(f'historical and {names[n_col*i+j]}')
@@ -191,14 +191,14 @@ def plot_zos_med_percentiles_per_scenarios(scenarios, labels, names, lower_bound
     #plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_median_percentiles_per scenario_{hist_start}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_median_percentiles_per scenario_{hist_start}', dpi = 500)
 
     
     
     
     
     
-def plot_wind_per_scenario(scenarios, labels, names, direction = 'Zonal', smoothed = False, window = 21, 
+def plot_wind_per_scenario(scenarios, labels, names, direction = 'Zonal', smoothed = False, window = 31, 
                            hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to plot the wind data per scenario by calling the functions make_wind_dfs and plot_wind
@@ -280,7 +280,7 @@ def make_wind_dfs(scenarios, labels, wind_model):
     
     
     
-def plot_wind_projections(scenarios, labels, names, direction = 'Zonal', smoothed = False, window = 21, 
+def plot_wind_projections(scenarios, labels, names, direction = 'Zonal', smoothed = False, window = 31, 
                            hist_start = 1950, wind_model = 'NearestPoint'):
     '''
     Function to plot the wind data for all models per scenario. 
@@ -386,7 +386,7 @@ def plot_wind_projections(scenarios, labels, names, direction = 'Zonal', smoothe
                         ax.set_ylabel(f'{direction} wind stress [m$^2$/s$^2$]')
                 ax.set_xlim(hist_start, 2101)
                 if i == n_row - 1:
-                    ax.set_xlabel('time [y]')
+                    ax.set_xlabel('time [yr]')
                 ax.set_ylim(y_min, y_max)
                 plt.tight_layout()
             
@@ -398,7 +398,7 @@ def plot_wind_projections(scenarios, labels, names, direction = 'Zonal', smoothe
 
     else:
         plt.savefig(
-            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_{direction.lower()}_wind_per_scenario_smoothed_{hist_start}')
+            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_{direction.lower()}_wind_per_scenario_smoothed_{hist_start}', dpi = 500)
 
 
 
@@ -503,7 +503,7 @@ def plot_wind_med_percentiles(scenarios, labels, names, lower_bound = 0.05, uppe
                 ax.plot(med, color = colors[n_col*i+j], label=f'median')
                 
                 if i == n_row - 1:
-                    ax.set_xlabel('time [y]')
+                    ax.set_xlabel('time [yr]')
                 if j == 0:
                     if wind_model == 'Dangendorf':
                         ax.set_ylabel(f'{direction} pressure proxy [Pa]')
@@ -518,7 +518,7 @@ def plot_wind_med_percentiles(scenarios, labels, names, lower_bound = 0.05, uppe
                 #plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{direction.lower()}_wind_{wind_model}_median_percentiles_per scenario_{hist_start}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{direction.lower()}_wind_{wind_model}_median_percentiles_per scenario_{hist_start}', dpi = 500)
     
         
         
@@ -528,7 +528,7 @@ def plot_wind_med_percentiles(scenarios, labels, names, lower_bound = 0.05, uppe
         
         
 
-def plot_projections_per_scenario(scenarios, labels, names, smoothed = False, window = 21, 
+def plot_projections_per_scenario(scenarios, labels, names, smoothed = False, window = 31, 
                                   hist_start = 1950, wind_model = 'NearestPoint', 
                                   ylabel = 'Wind contribution to sea level [cm]'):
     """
@@ -555,7 +555,7 @@ def plot_projections_per_scenario(scenarios, labels, names, smoothed = False, wi
             index = i
     models = scenarios[index].columns.values
     
-    colors = ['g', 'r', 'b', 'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+    colors = ['g', 'r', 'b', 'tab:blue', 'tab:orange', 'pink', 'tab:green', 'tab:red', 'tab:purple', 
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
     
     if smoothed == True:
@@ -604,7 +604,7 @@ def plot_projections_per_scenario(scenarios, labels, names, smoothed = False, wi
                     ax.set_ylabel(ylabel)
                 ax.set_xlim(hist_start, 2101)
                 if i == n_row - 1:
-                    ax.set_xlabel('time [y]')
+                    ax.set_xlabel('time [yr]')
                 if wind_model != 'Dangendorf':
                     ax.set_ylim(y_min, y_max)
                 ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
@@ -614,16 +614,16 @@ def plot_projections_per_scenario(scenarios, labels, names, smoothed = False, wi
             
     
     if smoothed == False:         
-        plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_projection_per_scenario_{hist_start}')
+        plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_projection_per_scenario_{hist_start}', dpi = 500)
 
     else:
-        plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_projection_per_scenario_smoothed_{hist_start}')
+        plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_projection_per_scenario_smoothed_{hist_start}', dpi = 500)
 
 
         
         
     
-def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoothed = False, window = 21, 
+def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoothed = False, window = 31, 
                                   hist_start = 1950):
     """
     Function to plot all models per scenario and for all wind models
@@ -637,7 +637,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoo
     smoothed should be True if the smoothing should be applied
     """
     
-    fsize = 11
+    fsize = 13
     
     n_col = 3
     n_row = len(scenarios[0])
@@ -652,7 +652,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoo
             index = i
     models = scenarios[0][index].columns.values
     
-    colors = ['b', 'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+    colors = ['b', 'tab:blue', 'tab:orange', 'tab:green', 'pink', 'tab:red', 'tab:purple', 
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan', 'g', 'k']
     
     if smoothed == True:
@@ -663,7 +663,7 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoo
         y_max = 8
     
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 2.5*n_row))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 2.7*n_row))
     
     for i in range(n_row):
 
@@ -673,43 +673,59 @@ def plot_projections_per_scenario_all_wind_models(scenarios, labels, names, smoo
             ax = axs[i,j]
 
             scenario = scenarios[j][i]
-
+            
+            ax.axhline(color='grey', linestyle='--')  
+            #ax.axvline(2014.5, color='grey', linestyle='--')
+            ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
+            
 
             for k, model in enumerate(models):
                 if model in scenario:
                     if smoothed == True:
                         frac = window/scenario[model].values.size
                         scenario_lowess = lowess(scenario[model].values, scenario.index.values, frac, return_sorted=False)
-                        ax.plot(scenario.index.values, scenario_lowess, label = model)
+                        if i == 0 and j == 0:
+                            ax.plot(scenario.index.values, scenario_lowess, label = model, color = colors[k])
+                        else:
+                            ax.plot(scenario.index.values, scenario_lowess, color = colors[k])
 
                     else:
-                        ax.plot(scenario.index.values, scenario[model].values, label = model)
+                        if i == 0 and j == 0:
+                            ax.plot(scenario.index.values, scenario[model].values, label = model, color = colors[k])
+                        else:
+                            ax.plot(scenario.index.values, scenario[model].values, color = colors[k])
+                        
             insert = ''
             if smoothed == True:
                 insert = f'\n lowess window = {window}'
             insert = ''
-            ax.set_title(f'{wind_labels[j]} \n historical and {names[i]}{insert}', fontsize = fsize)
-            if j == 0:
-                ax.set_ylabel('Atmospheric contribution to\n mean sea level [cm]', fontsize = fsize)
+            if i == 0 and j == 0:
+                ax.set_title(f'{names[i]}{insert} / {wind_labels[j]}', fontsize = fsize)
+            elif j == 0:
+                ax.set_title(f'{names[i]}{insert}', fontsize = fsize)
+            elif i == 0:
+                ax.set_title(f'{wind_labels[j]}', fontsize = fsize)
+                
+                
+            if j == 0 and i == 1:
+                ax.set_ylabel('Atmospheric contribution to\n sea level change [cm]', fontsize = fsize)
             ax.set_xlim(hist_start, 2101)
             if i == n_row - 1:
-                ax.set_xlabel('time [y]', fontsize = fsize)
+                ax.set_xlabel('Time [yr]', fontsize = fsize)
             ax.set_ylim(y_min, y_max)
-            ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
-            ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
             
 
 
-    fig.legend(labels = models, loc="lower center", bbox_to_anchor=(0.5, -0.09), ncol=6)
+    fig.legend(loc="lower center", bbox_to_anchor=(0.5, -0.09), ncol=6)
     plt.tight_layout()           
     
     if smoothed == False:         
         plt.savefig(
-            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/projection_per_scenario_all_wm_{hist_start}')
+            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/projection_per_scenario_all_wm_{hist_start}', dpi = 500)
 
     else:
         plt.savefig(
-            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/projection_per_scenario_all_wm_smoothed_{hist_start}')
+            f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/projection_per_scenario_all_wm_smoothed_{hist_start}', dpi = 500)
 
 
        
@@ -739,7 +755,7 @@ def plot_med_percentiles_scenarios(scenarios, labels, names, lower_bound = 0.05,
     
     
     plt.xlim(hist_start, 2101)
-    plt.xlabel('time [y]')
+    plt.xlabel('time [yr]')
     plt.ylabel('Wind contribution to sea level [cm]')
     plt.title(f'Compare wind contribution projections from scenarios \n'+
                   f'with running average of {ra} years')
@@ -748,7 +764,7 @@ def plot_med_percentiles_scenarios(scenarios, labels, names, lower_bound = 0.05,
     plt.grid(True)
     plt.legend(bbox_to_anchor=(1, 0.7))
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_median_percentiles_{hist_start}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_median_percentiles_{hist_start}', dpi = 500)
 
 
     
@@ -803,7 +819,7 @@ def plot_med_percentiles_per_scenarios(scenarios, labels, names, lower_bound = 0
                 ax.plot(med, color = colors[n_col*i+j], label=f'median')
                 
                 if i == n_row - 1:
-                    ax.set_xlabel('time [y]')
+                    ax.set_xlabel('time [yr]')
                 if j == 0:
                     ax.set_ylabel('Wind contribution to sea level [cm]')
                 ax.set_title(f'historical and {names[n_col*i+j]}')
@@ -816,128 +832,9 @@ def plot_med_percentiles_per_scenarios(scenarios, labels, names, lower_bound = 0
                 #plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_median_percentiles_per scenario_{hist_start}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_median_percentiles_per scenario_{hist_start}', dpi = 500)
 
 
-
-
-
-def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names, wc_historical, lower_bound = 0.05, upper_bound = 0.95, 
-                                                       ra = 5, hist_start = 1950, wind_model = 'NearestPoint'):
-    '''
-    Function to make a plot of the median and upper and lower bound of the models for each scenario.
-    Define the percentiles by setting the lower_bound and upper_bound and 
-    what running average is applied by setting ra
-    
-    '''
-    
-    fsize = 14
-    
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
-              'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
-    
-    # Create dataframe of wind contribution
-    wc_historical_np = wc_historical[0].wind_total.to_pandas().T
-    wc_historical_tim = wc_historical[1].wind_total.to_pandas().T
-    wc_historical_da = wc_historical[2].wind_total.to_pandas().T
-    
-    # Obtain median and bounds for wind contribution
-    med_wc_np = wc_historical_np.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    lb_wc_np = wc_historical_np.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    ub_wc_np = wc_historical_np.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    
-    med_wc_tim = wc_historical_tim.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    lb_wc_tim = wc_historical_tim.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    ub_wc_tim = wc_historical_tim.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    
-    med_wc_da = wc_historical_da.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    lb_wc_da = wc_historical_da.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    ub_wc_da = wc_historical_da.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-    
-    
-    n_col = 3
-    n_row = math.ceil(len(scenarios[0]) / n_col)
-    n_delete = len(scenarios[0]) % n_col
-    
-    y_min = -5
-    y_max = 5
-    
-    fig, axs = plt.subplots(n_row, n_col, figsize=(20, 8))
-    
-    
-    for i in range(n_row):
-
-        for j in range(n_col):
-            
-            ax = axs[i,j]
-
-            if i == n_row-1 and j in range(n_delete, n_col):
-                fig.delaxes(axs[i,j])
-                
-                
-            else:
-                
-                # NearestPoint
-                scenario = scenarios[0][n_col*i+j]
-                med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                ub = scenario.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                
-                color = colors[0]
-                ax.fill_between(ub.index, ub, lb, color = color, alpha=0.3)
-                ax.plot(med, color = color, label='NearestPoint')
-                
-                # Plot historical
-                ax.fill_between(ub_wc_np.index, ub_wc_np, lb_wc_np, color = color, alpha=0.3)
-                ax.plot(med_wc_np, color = color)
-
-                
-                # Timmerman
-                scenario = scenarios[1][n_col*i+j]
-                med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                ub = scenario.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                
-                color = colors[1]
-                ax.fill_between(ub.index, ub, lb, color = color, alpha=0.3)
-                ax.plot(med, color = color, label='Timmerman')
-                
-                # Plot historical
-                ax.fill_between(ub_wc_tim.index, ub_wc_tim, lb_wc_tim, color = color, alpha=0.3)
-                ax.plot(med_wc_tim, color = color)
-                
-                
-                
-                
-                
-                # Dangendorf
-                scenario = scenarios[2][n_col*i+j]
-                med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                ub = scenario.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
-                
-                color = colors[2]
-                ax.fill_between(ub.index, ub, lb, color = color, alpha=0.3)
-                ax.plot(med, color = color, label='Dangendorf')
-                
-                # Plot historical
-                ax.fill_between(ub_wc_da.index, ub_wc_da, lb_wc_da, color = color, alpha=0.3)
-                ax.plot(med_wc_da, color = color)
-                
-                
-                
-                
-                ax.set_xlabel('time [y]', fontsize=fsize)
-                ax.set_ylabel('Atmospheric contribution to\n mean sea level [cm]', fontsize=fsize)
-                ax.set_title(f'historical and  {names[n_col*i+j]}\n median and {int(lower_bound*100)}-{int(upper_bound*100)} percentiles', fontsize=fsize)
-                ax.set_xlim(hist_start, 2101)
-                ax.set_ylim(y_min, y_max)
-                ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
-                ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
-                ax.legend(loc='upper left')
-    plt.tight_layout()
-    
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{wind_model}_median_percentiles_per scenario_all_wind_models_{hist_start}')
 
 
 
@@ -955,18 +852,18 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
     '''
     
     
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+    colors = ['tab:green', 'tab:purple', 'tab:pink', 'tab:red', 'tab:purple', 
               'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
     
-    fsize = 14
+    fsize = 15
     
     n_col = 3
     n_row = len(scenarios[0])
     
-    y_min = -4
-    y_max = 4
+    y_min = -2.2
+    y_max = 2.9
     
-    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 3.5*n_row))
+    fig, axs = plt.subplots(n_row, n_col, figsize=(20, 2.8*n_row))
     
     
     for i in range(n_row):
@@ -976,7 +873,81 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
             ax = axs[i,j]
     
             scenario = scenarios[j][i]
+            
+            ax.axhline(color='grey', linestyle='--')  
+            ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
                 
+            med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
+            lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
+            ub = scenario.quantile(upper_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
+
+            ax.fill_between(ub.index, ub, lb, color = colors[i], alpha=0.2, 
+                                label=f'{int(lower_bound*100)}-{int(upper_bound*100)} percentiles')
+            ax.plot(med, color = colors[i], label=f'median')
+                
+            if i == n_row - 1:
+                ax.set_xlabel('Time [yr]', fontsize = fsize)
+            if j == 0 and i == 1:
+                ax.set_ylabel('Dynamic sea level change [cm]', fontsize = fsize)
+            ax.set_xlim(hist_start, 2101)
+            ax.set_ylim(y_min, y_max)
+            if j == 0:
+                ax.legend(loc='upper left', fontsize = 13)
+            
+            if i == 0 and j == 0:
+                ax.set_title(f'{names[i]} / {wind_labels[j]}', fontsize = 13)
+            elif j == 0:
+                ax.set_title(f'{names[i]}', fontsize = 13)
+            elif i == 0:
+                ax.set_title(f'{wind_labels[j]}', fontsize = 13)
+            
+            
+            
+            plt.tight_layout()
+            
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/median_percentiles_per scenario_all_wm_{hist_start}',
+               bbox_inches = 'tight', dpi = 500)
+
+
+
+def plot_med_percentiles_per_scenarios_all_wind_models2(scenarios, labels, names, lower_bound = 0.05, upper_bound = 0.95, ra = 5
+                                       , hist_start = 1950):
+    '''
+    Function to make a plot of the median and upper and lower bound of the models for each scenario and all three wind models
+    Define the percentiles by setting the lower_bound and upper_bound and 
+    what running average is applied by setting ra
+    
+    scenarios should be a list of lists of the wind contribution per scenario for the three wind models
+    labels should be a list of the scenario names
+    wc_historical should be a list of the three historical wind contributions resulting from the three wind models
+    
+    '''
+    
+    
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+              'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'] 
+    
+    fsize = 13
+    
+    n_col = 3
+    n_row = len(scenarios[0])
+    
+    y_min = -2.2
+    y_max = 2.9
+    
+    fig, axs = plt.subplots(n_row, n_col, figsize=(15, 2.8*n_row))
+    
+    
+    for i in range(n_row):
+
+        for j in range(n_col):
+            
+            ax = axs[i,j]
+    
+            scenario = scenarios[j][i]
+            
+            ax.axhline(color='grey', linestyle='--')  
+            ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
                 
             med = scenario.quantile(0.5, axis = 1).rolling(ra, center=True, min_periods=1).mean()
             lb = scenario.quantile(lower_bound, axis = 1).rolling(ra, center=True, min_periods=1).mean()
@@ -987,23 +958,27 @@ def plot_med_percentiles_per_scenarios_all_wind_models(scenarios, labels, names,
             ax.plot(med, color = colors[i], label=f'median')
                 
             if i == n_row - 1:
-                ax.set_xlabel('time [y]', fontsize = fsize)
-            if j == 0:
-                ax.set_ylabel('Atmospheric contribution to \n mean sea level [cm]', fontsize = fsize)
+                ax.set_xlabel('Time [yr]', fontsize = fsize)
+            if j == 0 and i == 1:
+                ax.set_ylabel('Atmospheric contribution to \n sea level change [cm]', fontsize = fsize)
             ax.set_xlim(hist_start, 2101)
-            #ax.set_ylim(y_min, y_max)
-            ax.axhline(color='darkgray', linestyle='-', linewidth = 1)  
-            ax.axvline(2014.5, color='darkgray', linestyle='-', linewidth = 1)
+            ax.set_ylim(y_min, y_max)
             if j == 0:
                 ax.legend(loc='upper left')
-            ax.set_title(f'{wind_labels[j]} - historical and {names[i]} \n running average = {ra}', fontsize = fsize)
+            
+            if i == 0 and j == 0:
+                ax.set_title(f'{names[i]} / {wind_labels[j]}', fontsize = fsize)
+            elif j == 0:
+                ax.set_title(f'{names[i]}', fontsize = fsize)
+            elif i == 0:
+                ax.set_title(f'{wind_labels[j]}', fontsize = fsize)
+            
+            
+            
             plt.tight_layout()
             
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/median_percentiles_per scenario_all_wm_{hist_start}')
-
-
-
-    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/median_percentiles_per scenario_all_wm_{hist_start}2',
+               bbox_inches = 'tight', dpi = 500)
     
     
 def make_percentile_df(scenarios, labels, names, percentiles = [5, 17, 50, 83, 95], year_s = 2000.5, year_e = 2100.5):
@@ -1130,7 +1105,7 @@ def summary_fig_and_table(df, wind_model = 'NearestPoint', colors=None, vlines=F
         for xc in xcoords:
             plt.axvline(x=xc, color='black', linewidth=0.5, linestyle='--')
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_{wind_model}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_{wind_model}', dpi = 500)
     
     
 
@@ -1222,4 +1197,194 @@ def summary_fig_and_table_all_wind_models(dfs, colors=None, vlines=False, period
             ax.set_ylabel(f'Atmospheric contribution\n to sea-level change [cm] \n {period} ', fontsize = 12)
         ax.set_title(wl, fontsize = 13)
     #plt.tight_layout()
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models_{name}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/summary_sea-level_change_all_wind_models_{name}', dpi = 500)
+    
+    
+def plot_ac_per_model_all_scenarios(data_lst, name = 'np', ymin = -3, ymax = 7):
+    sce_names = ['SSP1-RCP2.6', 'SSP2-RCP4.5', 'SSP5-RCP8.5']
+    colors = ['tab:green', 'tab:purple', 'tab:pink']
+    best_models = list(data_lst[0].columns)
+    
+    
+    
+    import math
+
+    fsize = 15
+
+    n_col = 3
+    n_row = math.ceil(len(best_models) / n_col)
+    n_delete = len(best_models) % n_col
+
+
+    fig, axs = plt.subplots(n_row, n_col, figsize=(14, 3*n_row), sharey=True, sharex = True)
+
+
+    for i in range(n_row):
+
+        for j in range(n_col):
+
+
+            ax = axs[i,j]
+
+            if i == n_row-1 and j in range(n_delete, n_col) and n_delete>0:
+                fig.delaxes(axs[i,j])
+
+            else:
+                for k, scenario in enumerate(sce_names):
+                    ax.plot(data_lst[k].loc[2015:2100].index, data_lst[k][best_models[n_row*i+j]].loc[2015:2100], label = scenario, color = colors[k])
+                ax.plot(data_lst[k].loc[1950:2015].index, data_lst[k][best_models[n_row*i+j]].loc[1950:2015], color = 'darkgrey')
+                ax.set_title(best_models[n_row*i+j], fontsize = 13)
+                #ax.set_ylim(ymin, ymax)
+                ax.set_xlim(1950, 2101)
+                ax.axhline(color='grey', linestyle='--')
+                if i == n_row-1:
+                    ax.set_xlabel('Time [yr]', fontsize = fsize)
+                #if j == 0 and i == 1:
+                #    ax.set_ylabel('Atmospheric contribution\n to sea level change [cm]', fontsize = 17)
+                plt.tight_layout()
+
+                if i == 0 and j == 0:
+                    ax.legend(labels = sce_names, fontsize = 13, loc = 'upper left')
+
+    # Adding a plot in the figure which will encapsulate all the subplots with axis showing only
+    fig.add_subplot(1, 1, 1, frame_on=False)
+
+    # Hiding the axis ticks and tick labels of the bigger plot
+    plt.tick_params(labelcolor="none", bottom=False, left=False)
+
+    # Adding the x-axis and y-axis labels for the bigger plot
+    plt.ylabel('Dynamic sea level [cm]', fontsize = fsize) 
+
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{name}_ac_1950_2100', 
+                bbox_inches = 'tight', dpi = 500)
+    
+    
+
+    
+def plot_ac_per_model_all_scenarios_smoothed(data_lst, name = 'np', ymin = -1, ymax = 2.2):
+    sce_names = ['SSP1-RCP2.6', 'SSP2-RCP4.5', 'SSP5-RCP8.5']
+    colors = ['tab:green', 'tab:purple', 'tab:pink']
+    best_models = list(data_lst[0].columns)
+    window = 31
+    import math
+
+    fsize = 15
+
+    n_col = 3
+    n_row = math.ceil(len(best_models) / n_col)
+    n_delete = len(best_models) % n_col
+
+
+    fig, axs = plt.subplots(n_row, n_col, figsize=(14, 2.5*n_row), sharey=True, sharex = True)
+
+
+    for i in range(n_row):
+
+        for j in range(n_col):
+
+
+            ax = axs[i,j]
+
+            
+
+            for k, scenario in enumerate(sce_names):
+                    
+                data_lowess = lowess(data_lst[k][best_models[n_col*i+j]].values, 
+                                    data_lst[k][best_models[n_col*i+j]].index.values, 
+                                    window/data_lst[k][best_models[n_col*i+j]].values.size, 
+                                    return_sorted=False)
+                ax.plot(data_lst[k].loc[2015:2100].index, data_lowess[165:], label = scenario, color = colors[k])
+            for k, scenario in enumerate(sce_names):
+                data_lowess = lowess(data_lst[k][best_models[n_col*i+j]].values, 
+                                    data_lst[k][best_models[n_col*i+j]].index.values, 
+                                    window/data_lst[k][best_models[n_col*i+j]].values.size, 
+                                    return_sorted=False)
+                ax.plot(data_lst[k].loc[1950:2015].index, data_lowess[100:166], color = 'darkgrey')
+            ax.set_title(best_models[n_col*i+j], fontsize = 13)
+            ax.set_ylim(-2.0, 3.2)
+            ax.set_xlim(1950, 2101)
+            ax.axhline(color='grey', linestyle='--')
+            if i == n_row-1:
+                ax.set_xlabel('Time [yr]', fontsize = fsize)
+            #if j == 0 and i == 1:
+            #    ax.set_ylabel('Atmospheric contribution\n to sea level change [cm]', fontsize = fsize)
+            plt.tight_layout()
+            if i == 0 and j == 0:
+                ax.legend(labels = sce_names, fontsize = 13, loc = 'upper left')
+
+    # Adding a plot in the figure which will encapsulate all the subplots with axis showing only
+    fig.add_subplot(1, 1, 1, frame_on=False)
+
+    # Hiding the axis ticks and tick labels of the bigger plot
+    plt.tick_params(labelcolor="none", bottom=False, left=False)
+
+    # Adding the x-axis and y-axis labels for the bigger plot
+    plt.ylabel('Dynamic sea level [cm]', fontsize = fsize) 
+
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/{name}_ac_1950_2100_smoothed2', 
+                bbox_inches = 'tight', dpi = 500)
+    
+    
+    
+def plot_zos_per_model_all_scenarios(scenarios_zos, ymin = -3, ymax = 7, begin = 1950, end = 2100):
+    
+    sce_names = ['SSP1-RCP2.6', 'SSP2-RCP4.5', 'SSP5-RCP8.5']
+    models = scenarios_zos[0].columns.values
+    colors = ['tab:green', 'tab:purple', 'tab:pink']
+    
+    import math
+
+    fsize = 15
+
+    n_col = 3
+    n_row = math.ceil(len(models) / n_col)
+    n_delete = len(models) % n_col
+
+
+    fig, axs = plt.subplots(n_row, n_col, figsize=(14, 3*n_row), sharey=True, sharex = True)
+
+
+    for i in range(n_row):
+
+        for j in range(n_col):
+
+
+            ax = axs[i,j]
+            
+            
+            if i == n_row-1 and j in range(n_delete, n_col) and n_delete>0:
+                fig.delaxes(axs[i,j])
+
+            else:
+                for k, scenario in enumerate(sce_names):
+                    ax.plot(scenarios_zos[k].loc[2015:end].index, 
+                            scenarios_zos[k][models[n_col*i+j]].loc[2015:end], label = scenario, color = colors[k])
+                    if i == 0 and j == 0:
+                        ax.legend(labels = sce_names, loc='upper left', fontsize = 13)
+                ax.plot(scenarios_zos[k].loc[begin:2015].index, 
+                        scenarios_zos[k][models[n_col*i+j]].loc[begin:2015], color = 'darkgrey')
+                ax.set_title(models[n_col*i+j], fontsize = 13)
+                ax.set_ylim(ymin, ymax)
+                ax.set_xlim(begin, end+1)
+                ax.tick_params(axis='both', which='major', labelsize=13)
+                ax.axhline(color='grey', linestyle='--')
+                if i == n_row-1:
+                    ax.set_xlabel('Time [yr]', fontsize = 15)
+                #if j == 0 and i == 0:
+                #    ax.set_ylabel('Dynamic sea level [cm]', fontsize = 17)
+                plt.tight_layout()
+                
+    
+    # Adding a plot in the figure which will encapsulate all the subplots with axis showing only
+    fig.add_subplot(1, 1, 1, frame_on=False)
+
+    # Hiding the axis ticks and tick labels of the bigger plot
+    plt.tick_params(labelcolor="none", bottom=False, left=False)
+
+    # Adding the x-axis and y-axis labels for the bigger plot
+    plt.ylabel('Dynamic sea level [cm]', fontsize = fsize) 
+    
+    
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Projections/zos_{begin}_{end}_per_model', 
+                bbox_inches = 'tight', dpi = 500)

@@ -140,6 +140,32 @@ def import_obs_slh_data():
 
 
 
+def import_obs_slh_data_raw():
+    """
+    Function that imports the tide gauge sea level height data as a pandas.dataframe
+    
+    
+    """
+    
+    
+    # Define paths to data
+    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/SLH/tg_data.csv'
+    
+    
+    # Open data file
+    tg_data_df = pd.read_csv(path)
+    
+    # Set time as index of dataframe
+    tg_data_df = tg_data_df.set_index('time')
+    
+     
+    tg_data_df['Average'] = tg_data_df.mean(axis=1)
+    
+    
+    return tg_data_df
+
+
+
 
 def import_cmip6_slh_data(data_type = 'historical'):
     """
@@ -199,7 +225,7 @@ def import_reg_results(output, data_type):
         
         
         # Define path
-        path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/'
+        path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/fullperiod/'
         
         if output == 'results':
             
@@ -243,7 +269,7 @@ def import_reg_results(output, data_type):
         
         
         # Define path
-        path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/'
+        path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/fullperiod/'
 
 
         # Import the files

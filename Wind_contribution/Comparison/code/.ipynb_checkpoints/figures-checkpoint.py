@@ -19,8 +19,7 @@ import xarray as xr
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from mtspec.multitaper import mtspec
-from sklearn.metrics import auc
+
 
 """
 Practical functions
@@ -64,6 +63,27 @@ COMPARISON
 
 """
 
+def plot_tg_data_raw(data, title = True):
+    """
+    Function to make a lineplot of the tide gauge data for each station
+    
+    """
+    fsize = 15
+    
+    ax = data[stations[:-1]].plot(figsize=(10,3), fontsize = fsize)
+    data['Average'].plot(ax=ax,color = 'k', fontsize = fsize)
+    plt.ylabel('Sea level change [cm]', fontsize = fsize)
+    plt.xlabel('Time [yr]', fontsize = fsize)
+    if title == True:
+        plt.title('Tide gauge time series', fontsize = fsize)
+    plt.legend(bbox_to_anchor=(1, 1), fontsize = fsize)
+    plt.axhline(color='grey', linestyle='--')
+    plt.xticks(fontsize = fsize)
+    plt.yticks(fontsize = fsize)
+    plt.tight_layout()
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/fullperiod/observations/tide_gauge_raw.png', bbox_inches = 'tight', dpi = 500)
+
 
 
 
@@ -88,7 +108,7 @@ def plot_obs_tg_wc_one_station(tg_data, ts_lst, labels, station = 'Average', sho
         
         
     plt.axhline(color='k', linestyle='--', linewidth = 1)
-    plt.xlabel('time [y]')
+    plt.xlabel('Time [yr]')
     plt.ylabel('SLH [cm]')
     plt.title('station = '+station)
     
@@ -141,7 +161,7 @@ def plot_obs_tg_wc_all_stations(tg_data, ts_lst, labels, show_tg = True, smoothe
             
         ax.axhline(color='k', linestyle='--', linewidth = 1)   
         ax.set_title('station = '+stations[2*i])
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('SLH [cm]')
         if show_tg:
             if smoothed:
@@ -177,7 +197,7 @@ def plot_obs_tg_wc_all_stations(tg_data, ts_lst, labels, show_tg = True, smoothe
 
             ax.axhline(color='k', linestyle='--', linewidth = 1)
             ax.set_title('station = '+stations[2*i+1])
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylabel('SLH [cm]')
             if show_tg:
                 if smoothed:
@@ -249,7 +269,7 @@ def plot_obs_running_trend_acceleration(data_lst, label_lst, period_length = 40,
     for i, label in enumerate(label_lst):
         plt.scatter(df_trend.index, df_trend[label], label = label,
                    marker = 'x', s=3, color = colors[i], alpha = alphas[i])
-    plt.xlabel('time [y]')
+    plt.xlabel('Time [yr]')
     plt.ylabel('trend [cm/y]')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.tight_layout()
@@ -258,7 +278,7 @@ def plot_obs_running_trend_acceleration(data_lst, label_lst, period_length = 40,
     for i, label in enumerate(label_lst):
         plt.scatter(df_acc.index, df_acc[label], label = label,
                    marker = 'x', s=3, color = colors[i], alpha = alphas[i])
-    plt.xlabel('time [y]')
+    plt.xlabel('Time [yr]')
     plt.ylabel('acceleration [cm/y$^2$]')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.tight_layout()
@@ -296,7 +316,7 @@ def plot_obs_running_trend(data_lst, label_lst, period_length = 40, station = 'A
     for i, label in enumerate(label_lst):
         plt.scatter(df_trend.index, df_trend[label]*10, label = label,
                    marker = 'x', s=3, color = colors[i], alpha = alphas[i])
-    plt.xlabel('time [y]')
+    plt.xlabel('Time [yr]')
     plt.ylabel('trend [mm/y]')
     plt.ylim(-0.5,1.1)
     plt.legend(bbox_to_anchor=(1, 1))
@@ -341,11 +361,10 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
     
     
     
-    
-    fig, axs = plt.subplots(9, 4, figsize=(24, 20))
+    fig, axs = plt.subplots(7, 4, figsize=(24, 20))
 
 
-    for i in range(9):
+    for i in range(7):
 
 
         ax = axs[i,0]
@@ -357,7 +376,7 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
         for ts in ts_lst:
             ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i]).values)
             
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('zos [cm]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i])
@@ -374,7 +393,7 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
         for ts in ts_lst:
             ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i+1]))
 
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i+1])
         ax.set_ylim(y_min,y_max)
@@ -389,7 +408,7 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
         for ts in ts_lst:
             ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i+2]))
 
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i+2])
         ax.set_ylim(y_min,y_max)
@@ -404,7 +423,7 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
         for ts in ts_lst:
             ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i+3]))
 
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i+3])
         ax.set_ylim(y_min,y_max)
@@ -428,7 +447,115 @@ def plot_zos_wc_per_model_one_station(zos, ts_lst, labels, station = 'Average', 
             plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/zos_wc_per_model_{station}')
             
             
-       
+def plot_zos_wc_per_model_one_station2(zos, ts_lst, labels, station = 'Average', show_zos = True, smoothed = False):
+    """
+    Function to make a plot of the zos timeseries and regression result for all cmip6 models, for one station and for all 
+    the wind contributions 
+    For station choose ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
+    
+    """
+    models = ts_lst[0].model.values
+    
+    
+    if show_zos:
+        if smoothed:
+            y_min = -8
+            y_max = 8
+        else:
+            y_min = -15
+            y_max = 15
+    else:
+        if smoothed:
+            y_min = -3
+            y_max = 3
+        else:
+            y_min = -10
+            y_max = 10
+    
+    
+    
+    fig, axs = plt.subplots(2, 4, figsize=(15, 6))
+
+
+    for i in range(2):
+
+
+        ax = axs[i,0]
+        
+        
+        if show_zos:
+            ax.plot(zos.time.values, zos.sel(station=station, model=models[4*i]), color = 'darkgray')
+        
+        for ts in ts_lst:
+            ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i]).values)
+            
+        ax.set_xlabel('Time [yr]', fontsize = 15)
+        ax.set_ylabel('Atmospheric contribution\n to sea level change [cm]', fontsize = 15)
+        ax.axhline(color='k', linestyle='--', linewidth = 1)
+        ax.set_title('model = ' + models[4*i], fontsize = 15)
+        ax.set_ylim(y_min,y_max)
+        
+        if i == 0:
+            if show_zos:
+                ax.legend(labels = labels)
+            else:
+                ax.legend(labels = labels[1:])
+        
+        ax = axs[i,1]
+        
+        if show_zos:
+            ax.plot(zos.time.values, zos.sel(station=station, model=models[4*i+1]), color = 'darkgray')
+
+        for ts in ts_lst:
+            ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i+1]))
+
+        ax.set_xlabel('Time [yr]', fontsize = 15)
+        ax.axhline(color='k', linestyle='--', linewidth = 1)
+        ax.set_title('model = ' + models[4*i], fontsize = 15)
+    
+        
+        ax = axs[i,2]
+        
+        if show_zos:
+            ax.plot(zos.time.values, zos.sel(station=station, model=models[4*i+2]), color = 'darkgray')
+
+        for ts in ts_lst:
+            ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i+2]))
+
+        ax.set_xlabel('Time [yr]', fontsize = 15)
+        ax.axhline(color='k', linestyle='--', linewidth = 1)
+        ax.set_title('model = ' + models[4*i], fontsize = 15)
+        ax.set_ylim(y_min,y_max)
+        
+        if i == 0:
+            ax = axs[i,3]
+
+            if show_zos:
+                ax.plot(zos.time.values, zos.sel(station=station, model=models[4*i+3]), color = 'darkgray')
+
+            for ts in ts_lst:
+                ax.plot(ts.time.values, ts.sel(station = station, model = models[4*i+3]))
+
+            ax.set_xlabel('Time [yr]', fontsize = 15)
+            ax.axhline(color='k', linestyle='--', linewidth = 1)
+            ax.set_title('model = ' + models[4*i], fontsize = 15)
+            ax.set_ylim(y_min,y_max)
+        
+        else:
+            fig.delaxes(axs[i,3])
+    
+    if show_zos:
+        if smoothed:
+            plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/zos_wc_per_model_{station}_showzos_smoothed')
+        else:
+            plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/zos_wc_per_model_{station}_showzos')
+    else:
+        if smoothed:
+            plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/zos_wc_per_model_{station}_smoothed')
+        else:
+            plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/zos_wc_per_model_{station}')
+            
+                
                     
             
 def plot_comp_reg_results_one_station(results_era5, results_20cr, results_hist, station, wind_model):
@@ -643,7 +770,7 @@ def plot_obs_sine_fits(data_lst, fits_dfs, label_lst, labels):
         
         if i == 0:
             ax.legend(labels=labels)
-        if i == 1: ax.set_xlabel('time [y]')
+        if i == 1: ax.set_xlabel('Time [yr]')
         ax.set_ylabel('SLH [cm]')
         ax.set_ylim(ymin, ymax)
         ax.set_xlim(xmin, xmax)
@@ -720,8 +847,8 @@ def plot_comp_cmip6_fit_results(obs_fits_df, cmip6_fits_df):
         plt.legend(labels=labels, ncol=3, bbox_to_anchor=(1.1, 1))
         plt.grid()
         plt.title('wind regression model = '+wind_model)
-        plt.xlabel('wavelength [y]')
-        plt.ylabel('amplitude [cm]')
+        plt.xlabel('Wavelength [yr]')
+        plt.ylabel('Amplitude [cm]')
         plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/amp_wl_{wind_model}')
         
         
@@ -763,8 +890,8 @@ def plot_cmip6_fits_per_model(data, fit_df1, fit_df2):
                                                       fit_df2[models[4*i], 'value']['phase']),
                linestyle='--') 
         
-        ax.set_xlabel('time [y]')
-        ax.set_ylabel('zos [cm]')
+        ax.set_xlabel('Time [yr]')
+        ax.set_ylabel('Zos [cm]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i])
         #ax.set_ylim(y_min,y_max)
@@ -792,7 +919,7 @@ def plot_cmip6_fits_per_model(data, fit_df1, fit_df2):
                                                       fit_df2[models[4*i+1], 'value']['phase']),
                linestyle='--')    
         
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('zos [cm]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i+1])
@@ -817,7 +944,7 @@ def plot_cmip6_fits_per_model(data, fit_df1, fit_df2):
                                                       fit_df2[models[4*i+2], 'value']['phase']),
                linestyle='--')     
         
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('zos [cm]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i+2])
@@ -842,7 +969,7 @@ def plot_cmip6_fits_per_model(data, fit_df1, fit_df2):
                                                       fit_df2[models[4*i+3], 'value']['phase']),
                linestyle='--')     
         
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('zos [cm]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         ax.set_title('model = ' + models[4*i+3])
@@ -887,11 +1014,11 @@ def plot_cmip6_running_trend(data_lst, label_lst, period_length = 40, station = 
     dataset = xr.Dataset(data_vars = {label_lst[0]:xr_lst1[0], label_lst[1]:xr_lst1[1], label_lst[2]:xr_lst1[2]})
     
     
-    fig, axs = plt.subplots(9, 4, figsize=(24, 20))
+    fig, axs = plt.subplots(7, 4, figsize=(24, 20))
     models = dataset.model.values
 
     
-    for i in range(9):
+    for i in range(7):
         
         
         ax = axs[i,0]
@@ -905,7 +1032,7 @@ def plot_cmip6_running_trend(data_lst, label_lst, period_length = 40, station = 
         if i == 0:
             ax.legend(labels = label_lst)
         if i == 8:
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
         ax.axhline(color='k', linestyle='--', linewidth = 1)
         plt.tight_layout()
         
@@ -920,7 +1047,7 @@ def plot_cmip6_running_trend(data_lst, label_lst, period_length = 40, station = 
             ax.set_ylim(y_min, y_max)
             ax.set_title(f'model = {models[4*i+j]}')
             if i == 8:
-                ax.set_xlabel('time [y]')
+                ax.set_xlabel('Time [yr]')
             plt.tight_layout()
             
     plt.tight_layout()

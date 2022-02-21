@@ -5,19 +5,33 @@ Author: Iris Keizer
 https://github.com/iris-keizer/Thesis-KNMI
 
 These functions are used in the notebooks:
+timmerman_regression_obs.ipynb
+timmerman_regression_cmip6.ipynb
+nearestpoint_regression_obs.ipynb
+nearestpoint_regression_cmip6.ipynb
+dangendorf_regression_obs.ipynb
+dangendorf_regression_cmip6.ipynb
+
 
 
 
 """
 
 # Import necessary packages
+import regionmask 
+import matplotlib 
+
 import pandas as pd
 import xarray as xr
 import numpy as np
 
+import cartopy.crs as ccrs
+import cartopy.feature as cf
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 
 from scipy.stats import linregress
+
 
 
 """
@@ -98,6 +112,7 @@ def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     
     else: print('For model choose [NearestPoint, Timmerman]' )
 
+    
 def get_decadal_trends_stds(data, time_period):
     """
     Function to obtain lists of years, trends and standard errors
@@ -120,8 +135,90 @@ def get_decadal_trends_stds(data, time_period):
 
 
 
+def station_coords(): 
+    """
+    Function to obtain the coordinates of the tide gauge stations as a dataframe
+    
+    """
+    
+    
+    # Necessary declarations to obtain tide gauge station coordinates
+    path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual/filelist.txt'
+    loc_num = [20, 22, 23, 24, 25, 32]
+    col_names = ['id', 'lat', 'lon', 'station', 'coastline_code', 'station_code', 'quality']
+    
+    # Create dataframe
+    df = pd.read_csv(path_locations, sep=';', header=None, names=col_names)
+    df = df.set_index('id')
+    df = df.loc[loc_num, :]
+    df['station'] = stations[:-1]
+    df = df.set_index('station')
+    df = df.drop(['coastline_code', 'station_code', 'quality'], axis=1)
+    
+    return df
 
 
+def cmip6_np_coords(): 
+    """
+    Function to obtain a dataframe containing the coordinates of cmip6 nearest points to tide gauge models
+    """
+    lat_lst = [51.5, 52.5, 52.5, 53.5, 53.5, 52.5]
+    lon_lst = [3.5, 4.5, 4.5, 6.5, 5.5, 4.5]
+    df = pd.DataFrame({'station' : stations[:-1], 'lat' : lat_lst, 'lon' : lon_lst})
+    df = df.set_index('station')
+    
+    return df
+
+
+def obs_np_coords(data_type = 'era5'): 
+    """
+    Function to obtain a dataframe containing the coordinates of observed nearest points above sea to tide gauge models
+    """
+    if data_type == 'era5':
+        lat_lst = [51.5, 52.0, 53.0, 53.5, 53.25, 52.5]
+        lon_lst = [3.5, 4.0, 4.75, 7.0, 5.25, 4.5]
+    elif data_type == '20cr':
+        lat_lst = [52, 52, 53, 54, 53, 52]
+        lon_lst = [4, 4, 5, 7, 5, 4]
+        
+    df = pd.DataFrame({'station' : stations[:-1], 'lat' : lat_lst, 'lon' : lon_lst})
+    df = df.set_index('station')
+    
+    return df
+
+
+
+def timmerman_regions():
+    """
+    Function to obtain the timmerman regions 
+    
+    """
+    
+    # Declare regions using coordinates
+    # As first coordinates take most South-West point and than go anti-clockwise
+    Channel = np.array([[-5.1, 48.6], [1.5, 50.1], [1.5, 50.9], [-5.1, 50.1]])
+    South = np.array([[0.5, 50.8], [3.2, 51.3], [5.3, 53.1], [1.7, 52.3]])
+    Mid_West = np.array([[1.7, 52.3], [5.3, 53.1], [3.7, 55.7], [-1.3, 55.1], [0.5, 53.1], [1.8, 52.7]])
+    Mid_East = np.array([[5.3, 53.1], [8.9, 53.9], [7.8, 57.0], [3.7, 55.7]])
+    North_West = np.array([[-1.3, 55.1], [3.7, 55.7], [1.1, 59.3], [-3.0, 58.7], [-1.7, 57.5], [-1.5, 55.5]])
+    North_East = np.array([[3.7, 55.7], [7.8, 57.0], [7.6, 58.1], [6.1, 58.6], [4.9, 60.3], [1.1, 59.3]])
+    
+    
+    # Declare names, abbreviations and numbers
+    region_names = ["Channel", "South", "Mid-West", "Mid-East", "North-West", "North-East"]
+    region_abbrevs = ["C", "S", "MW", "ME", "NW", "NE"]
+    region_numbers = [1,2,3,4,5,6]
+    
+    
+    # Create regions 
+    Timmerman_regions = regionmask.Regions([Channel, South, Mid_West, Mid_East, North_West, North_East], 
+                                           numbers = region_numbers, 
+                                           names=region_names, abbrevs=region_abbrevs, name="Timmerman")
+    
+    return Timmerman_regions
+    
+    
+    
 
 # Declare global variables
 stations = station_names()
@@ -131,7 +228,7 @@ many_colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', '
               'palegreen', 'darkgreen', 'mediumseagreen', 'springgreen', 'aquamarine', 'mediumturquoise', 'paleturquoise', 'darkcyan', 'steelblue', 
                'dodgerblue', 'slategray',  'royalblue', 'navy', 'slateblue', 'darkslateblue', 'indigo',  'plum', 'darkmagenta', 'magenta', 'deeppink']
 
-
+fsize = 12
 
 
 """
@@ -150,63 +247,114 @@ OBSERVATIONS
 """
 
     
-def plot_tg_data(data):
+def plot_tg_data(data, title = True, period = 'fullperiod'):
     """
     Function to make a lineplot of the tide gauge data for each station
     
     """
+    fsize = 13
     
-    data.plot(figsize=(9,3), title='Tide gauge time series', 
-              ylabel = 'Sea level height above NAP [cm]',
-             xlabel = 'Time [y]')
-    plt.legend(bbox_to_anchor=(1, 1))
-    plt.tight_layout()
+    ax = data[stations[:-1]].plot(figsize=(9,3), fontsize = fsize)
+    data['Average'].plot(ax=ax,color = 'k', linewidth = .95, fontsize = fsize)
+    plt.ylabel('Sea level change [cm]', fontsize = fsize)
+    plt.xlabel('Time [yr]', fontsize = fsize)
+    if title == True:
+        plt.title('Tide gauge time series', fontsize = fsize)
+    plt.legend(bbox_to_anchor=(1, 1), fontsize = 12)
     plt.axhline(color='grey', linestyle='--')
-    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/tide_gauge.png')
+    plt.xticks(fontsize = fsize)
+    plt.yticks(fontsize = fsize)
+    plt.tight_layout()
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/tide_gauge.png', bbox_inches = 'tight', dpi = 500)
+
 
     
-    
-
-    
-def plot_obs_wind_data(data, model, data_type):
+def plot_obs_wind_data(data, model, data_type, title = True, period = 'fullperiod'):
     """
     Function to make lineplots of the observed zonal and meridional wind data for each station 
     
     """
-    
-    
+    fsize = 13
+    fig = plt.figure(figsize=(9,3))
     u2_df = new_df_obs_wind_per_var(data, model = model)
-    u2_df.plot(figsize=(9,3), title=f'Annual zonal wind stress ({data_type})', 
-              ylabel = 'u$^2$ [m$^2$/s$^2$]',
-             xlabel = 'Time [y]')
-    plt.tight_layout()
+    
+    for station in u2_df.columns:
+        if station == 'Average':
+            plt.plot(u2_df.index, u2_df[station], color = 'k', label = station, linewidth = .95)
+        else:
+            plt.plot(u2_df.index, u2_df[station], label = station)
+            
+    if title == True:
+        plt.title(f'Annual zonal wind stress ({data_type})', fontsize = fsize)
+        
     plt.axhline(color='grey', linestyle='--')
-    plt.legend(bbox_to_anchor=(1, 1))
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/u2_all_stations.png')
+    
+    if data_type == 'era5':
+        plt.legend(fontsize = 12)
+    
+    plt.xlabel('Time [yr]', fontsize = 15)
+    plt.ylabel('U|U| [m$^2$/s$^2$]', fontsize = 15)
+    plt.xticks(fontsize = 13)
+    plt.yticks(fontsize = 13)
+    plt.xlim(1830, 2026)
+    plt.tight_layout()
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/u2_all_stations.png', bbox_inches = 'tight', dpi = 500)
     
     
-    v2_df = new_df_obs_wind_per_var(data, variable = 'v$^2$', model = model)
-    v2_df.plot(figsize=(9,3), title=f'Annual meridional wind stress ({data_type})', 
-              ylabel = 'v$^2$ [m$^2$/s$^2$]',
-             xlabel = 'Time [y]')
-    plt.tight_layout()
+    fig = plt.figure(figsize=(9,3))
+    v2_df = new_df_obs_wind_per_var(data, variable  = 'v$^2$', model = model)
+    
+    for station in v2_df.columns:
+        if station == 'Average':
+            plt.plot(v2_df.index, v2_df[station], color = 'k', label = station)
+        else:
+            plt.plot(v2_df.index, v2_df[station], label = station)
+            
+    if title == True:
+        plt.title(f'Annual meridional wind stress ({data_type})', fontsize = fsize)
+        
     plt.axhline(color='grey', linestyle='--')
-    plt.legend(bbox_to_anchor=(1, 1))
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/v2_all_stations.png')
+    
+    plt.xlabel('Time [yr]', fontsize = 15)
+    plt.ylabel('V|V| [m$^2$/s$^2$]', fontsize = 15)
+    plt.xticks(fontsize = 13)
+    plt.yticks(fontsize = 13)
+    plt.xlim(1830, 2026)
+    plt.tight_layout()
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/v2_all_stations.png', bbox_inches = 'tight', dpi = 500)
+    
+    
     
        
-def plot_obs_pres_data(data, model, data_type):
+def plot_obs_pres_data(data, model, data_type, title = True, period = 'fullperiod'):
     """
     Function to make a lineplot of the observed pressure proxy for wind data
     
     """
+    labels = ['Negative correlation area', 'Positive correlation area']
+    cmap = matplotlib.cm.get_cmap('RdBu')    
     
-    data.plot(figsize=(9,3), title='Annual observed atmospheric proxies', 
-              ylabel = 'Regional averaged sea level pressure [Pa]',
-             xlabel = 'Time [y]')
-    plt.legend(bbox_to_anchor=(1, 1))
+    colors = [cmap(0.9999), cmap(0)]
+    fsize = 13
+    
+    plt.figure(figsize=(9,3))
+    for i, column in enumerate(data.columns):
+        plt.plot(data.index, data[column]/100, label = labels[i], color = colors[i])
+    if data_type == 'era5':
+        plt.legend(fontsize = 14)
+    plt.xlabel('Time [yr]', fontsize = 15)
+    plt.ylabel('Sea level pressure [hPa]', fontsize = 15)
+    plt.xlim(1830, 2026)
+    plt.ylim(1007, 1019)
+    plt.xticks(fontsize = 15)  
+    plt.yticks(fontsize = 15)
+        
     plt.tight_layout()
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/obs_pres_data.png')
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/obs_pres_data.png', bbox_inches = 'tight', dpi = 500)
 
             
     
@@ -217,7 +365,7 @@ def plot_obs_pres_data(data, model, data_type):
     
     
     
-def plot_obs_result_per_station(data, variable, model, data_type):
+def plot_obs_result_per_station(data, variable, model, data_type, period = 'fullperiod'):
     """
     Function to make a scatter plot of observational regression results per station for a specific variable
     
@@ -230,12 +378,92 @@ def plot_obs_result_per_station(data, variable, model, data_type):
     plt.tight_layout()
     plt.title(f'{variable} results of regression between slh and wind')
     plt.axhline(color='grey', linestyle='--')
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/{variable}_per_station.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/{variable}_per_station.png', bbox_inches='tight')
+    
+    
+def plot_obs_timeseries_one_station_tg_ac(tg_data, timeseries, station, model, data_type, title = True, period = 'fullperiod'):
+    """
+    Function to make a plot of the tg_data timeseries and atmospheric contribution for one station
+    
+    """
+    fsize = 15
+    
+    fig= plt.figure(figsize=(9, 3))
+    
+    plt.plot(tg_data.index.values, tg_data[station].values, color = 'darkgray')
+    plt.plot(timeseries.index.values, timeseries[station, 'wind total'].values)
+    
+    if title == True:
+        plt.title('station = '+station, fontsize = fsize)
+    plt.xlabel('Time [yr]', fontsize = fsize)
+    plt.ylabel('Sea level change [cm]', fontsize = fsize)
+    labels = ['Tide gauge data', 'Atmospheric contribution']
+    plt.legend(labels = labels, fontsize = fsize)
+    plt.axhline(color='grey', linestyle='--')
+    if data_type == 'era5':
+        plt.ylim(-7, 22)
+        plt.xlim(1949,2021)
+    if data_type == '20cr':
+        plt.ylim(-17, 22)
+    plt.xticks(fontsize = 13)
+    plt.yticks(fontsize = 13)
+    plt.tight_layout()
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/timeseries_{station}_tg_ac.png', bbox_inches='tight', dpi = 500)
     
     
     
     
-def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type):
+def plot_obs_timeseries_one_station_ac_u_v(tg_data, timeseries, station, model, data_type, title = True, period = 'fullperiod'):
+    """
+    Function to make a plot of the tg_data timeseries and atmospheric contribution for one station
+    
+    """
+    fsize = 15
+    
+    fig= plt.figure(figsize=(9, 3))
+    
+    plt.plot(timeseries.index.values, timeseries[station, 'wind total'].values, color = 'k')
+    if model == 'NearestPoint':
+        plt.plot(timeseries.index.values, timeseries[station, 'u$^2$'].values)
+        plt.plot(timeseries.index.values, timeseries[station, 'v$^2$'].values)
+        labels = ['Total wind influence', 'Zonal contribution', 'Meridional contribution']
+    elif model == 'Timmerman':
+        plt.plot(timeseries.index.values, timeseries[station, 'u$^2$ total'].values)
+        plt.plot(timeseries.index.values, timeseries[station, 'v$^2$ total'].values)
+        labels = ['Total wind influence', 'Zonal contribution', 'Meridional contribution']
+    elif model == 'Dangendorf':
+        plt.plot(timeseries.index.values, timeseries[station, 'Negative corr region'].values)
+        plt.plot(timeseries.index.values, timeseries[station, 'Positive corr region'].values)
+        labels = ['Total wind influence', 'Negative corr contribution', 'Positive corr contribution']
+        
+        
+    if title == True:
+        plt.title('station = '+station, fontsize = fsize)
+        
+    plt.xlabel('Time [yr]', fontsize = fsize)
+    plt.ylabel('Sea level change [cm]', fontsize = fsize)
+    plt.legend(labels = labels, fontsize = 13, loc = 'upper left', ncol = 2)
+    plt.xticks(fontsize = 13)
+    plt.xlim(1830, 2026)
+    plt.yticks(fontsize = 13)
+    plt.axhline(color='grey', linestyle='--')
+    if data_type == 'era5':
+        plt.ylim(-7, 9)
+        plt.xlim(1949,2021)
+    if data_type == '20cr':
+        plt.ylim(-7, 9)
+    plt.tight_layout()
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/timeseries_{station}_ac_u_v.png', bbox_inches='tight', dpi = 500)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type, period = 'fullperiod'):
     """
     Function to make a plot of the tg_data timeseries and regression result for each station
     For var choose a list consisting of ['u$^2$', 'v$^2$', 'trend', 'total', 'wind total']
@@ -254,7 +482,7 @@ def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type):
         for variab in var:
             ax.plot(timeseries.index.values, timeseries[stations[2*i], variab].values)
         ax.set_title(f'station='+stations[2*i])
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('SLH [cm]')
         ax.set_ylim(-20,20)
         plt.tight_layout()
@@ -269,18 +497,18 @@ def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type):
             for variab in var:
                 ax.plot(timeseries.index.values, timeseries[stations[2*i], variab].values)
             ax.set_title(f'station='+stations[2*i])
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylabel('SLH [cm]')
             ax.set_ylim(-20,20)
             plt.tight_layout()
     
     labels=['tide gauge data']+var
     fig.legend(labels=labels, loc=(0.57, 0.1))
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/timeseries_per_station_{var}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/timeseries_per_station_{var}.png', bbox_inches='tight', dpi = 500)
 
     
     
-def plot_obs_trends_timeseries_per_station(tg_data, timeseries, var, model, data_type):
+def plot_obs_trends_timeseries_per_station(tg_data, timeseries, var, model, data_type, period = 'fullperiod'):
     """
     Function to make a plot of the trends over the whole timeseries of both 
     tide gauge observations and regression results per station
@@ -309,11 +537,11 @@ def plot_obs_trends_timeseries_per_station(tg_data, timeseries, var, model, data
         plt.errorbar(stations, trend_lst, yerr=se_lst, fmt="o", label = variab)
 
     plt.xlabel('station')
-    plt.ylabel('Linear trend $\pm1\sigma$ [cm/y] ')
+    plt.ylabel('Linear trend $\pm1\sigma$ [cm/yr] ')
     plt.tight_layout()
     plt.legend(bbox_to_anchor=(1, 1))
     plt.axhline(color='grey', linestyle='--')
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/timeseries_trends_per_station.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/timeseries_trends_per_station.png', bbox_inches='tight', dpi = 500)
     
     
     
@@ -321,7 +549,8 @@ def plot_obs_trends_timeseries_per_station(tg_data, timeseries, var, model, data
     
     
     
-def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, time_period, model, data_type, errorbar = True):
+def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, time_period, model, data_type, 
+                                                   errorbar = True, period = 'fullperiod'):
     """
     Function to make a plot of the trends over a certain decade of both 
     tide gauge observations and regression results per station
@@ -356,11 +585,11 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
                 
                 
         ax.set_title(f'station={stations[2*i]} \n linear trends over {time_period} years')
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         if errorbar == True:
-            ax.set_ylabel('linear trend [cm/year]\n $\pm 1\sigma$')
+            ax.set_ylabel('linear trend [cm/yr]\n $\pm 1\sigma$')
         else:
-            ax.set_ylabel('linear trend [cm/year]')
+            ax.set_ylabel('linear trend [cm/yr]')
                 
         ax.set_ylim(-0.1,0.4)
         ax.axhline(color='grey', linestyle='--')
@@ -385,29 +614,287 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
                     ax.scatter(years, trends, marker='.', label = variab, s=size)
                 
             ax.set_title(f'station={stations[2*i]} \n linear trends over {time_period} years')
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylim(-0.1,0.4)
             ax.axhline(color='grey', linestyle='--')
     
     labels = ['Tide gauge']+var
     fig.legend(labels=labels, loc=(0.57, 0.05))
     plt.tight_layout()
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/observations/{model}/{data_type}/{time_period}_trends_per_station_{model}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/{time_period}_trends_per_station_{model}.png', bbox_inches='tight', dpi = 500)
     
 
-def plot_np_locations(data_type):
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Coordinates/'
-    tg_coords = pd.read_csv(path+'tgstations.csv', index_col='station')
-    np_coords = pd.read_csv(path+f'np_{data_type}.csv', index_col='station')
+def plot_np_locations(title = True, period = 'fullperiod'):
+    '''
+    Function that plots a map of the Dutch coast indicating the locations of the tide gauge stations, reanalysis and cmip6 data
+    '''
+    fsize = 13
+    
+    tg_coords = station_coords()
+    era5_coords = obs_np_coords('era5')
+    cr_coords = obs_np_coords('20cr')
+    cmip6_coords = cmip6_np_coords()
     
     
+    fig = plt.figure(figsize=(8,16))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    if title == True:
+        plt.title('Data locations along the Dutch coast')
+    ax.set_extent([3.2, 7.2, 50.6, 54.1], ccrs.PlateCarree())
+    ax.coastlines(resolution='10m')
     
+    gl = ax.gridlines(draw_labels = True, linestyle='--')
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.xlabel_style = {'size': 15}
+    gl.ylabel_style = {'size': 15}
+    plt.xlabel('Longitude [°]')
+    plt.ylabel('Latitude [°]')
+    ax.add_feature(cf.OCEAN)
+    ax.add_feature(cf.LAND)
+    ax.add_feature(cf.LAKES)
+    ax.add_feature(cf.BORDERS)
     
-    return tg_coords, np_coords
-    
-    
+    for i, station in enumerate(tg_coords.index):
+        lat = tg_coords['lat'][station]
+        lon = tg_coords['lon'][station]
+        plt.scatter(lon, lat, s=55, marker='o', color='tab:red', 
+                    label = f'{station} ({round(lat,1)}, {round(lon,1)})')
+        plt.scatter(era5_coords['lon'][station], era5_coords['lat'][station], s=30, marker='o', color='k')
+        plt.scatter(cr_coords['lon'][station], cr_coords['lat'][station], s=30, marker='v', color='k')
+        plt.scatter(cmip6_coords['lon'][station], cmip6_coords['lat'][station], s=30, marker='s', color='k')
+
+
+    # Add station names
+    plt.text(tg_coords['lon']['Vlissingen']-0.3, tg_coords['lat']['Vlissingen']-0.35, 'Vlissingen', fontsize = fsize)
+    plt.text(tg_coords['lon']['Hoek v. Holland']+0.08, tg_coords['lat']['Hoek v. Holland']-0.06, 'Hoek v. Holland', fontsize = fsize)
+    plt.text(tg_coords['lon']['Den Helder']-0.02, tg_coords['lat']['Den Helder']-0.15, 'Den Helder', fontsize = fsize)
+    plt.text(tg_coords['lon']['Delfzijl']-0.45, tg_coords['lat']['Delfzijl']-0.04, 'Delfzijl', fontsize = fsize)
+    plt.text(tg_coords['lon']['Harlingen']+0.09, tg_coords['lat']['Harlingen']-0.04, 'Harlingen', fontsize = fsize)
+    plt.text(tg_coords['lon']['IJmuiden']+0.05, tg_coords['lat']['IJmuiden']-0.05, 'IJmuiden', fontsize = fsize)
     
 
+    plt.legend(labels = ['Tide gauge sea level data', 'ERA5 reanalysis wind data', 
+                         '20CRv3 reanalysis wind data', 'CMIP6 data'], loc='upper left', fontsize = 12.5)
+
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/np_data_locations.png', bbox_inches='tight', dpi = 500)
+
+
+
+
+def timmerman_regions_plot(title = True, period = 'fullperiod'):
+    '''
+    Function that plots a map of the North Sea indicating the locations of the Timmerman regions
+    '''
+    fsize = 13
+    fig = plt.figure(figsize=(8,16))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    if title == True:
+        plt.title('Locations of the Timmerman regions')
+    ax.set_extent([-7, 10, 47, 61], ccrs.PlateCarree())
+
+    text_kws = dict(
+        bbox=dict(color="none"),
+        fontsize=15,
+    )
+
+
+    ax = timmerman_regions().plot(add_ocean=True, resolution="50m", proj=ccrs.Robinson(), label='name', text_kws=text_kws)
+
+    ax.add_feature(cf.BORDERS, linewidth=.7)
+    ax.add_feature(cf.LAND)
+    ax.add_feature(cf.LAKES)
+    ax.coastlines(resolution='50m', linewidth=.7)
+    gl = ax.gridlines(draw_labels = True)
+    gl.xlabel_style = {'size': 15}
+    gl.ylabel_style = {'size': 15}
+    gl.top_labels = False
+    gl.right_labels = False
+    plt.xticks(fontsize = fsize)
+    plt.yticks(fontsize = fsize)
+
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/tim_regions.png', bbox_inches='tight', dpi = 500)
+
+
+
+def dangendorf_regions_plot(pres_corr, tg_corr, data_type, title = True, year_start = 1950, year_final = 2015, period = 'fullperiod'):
+    '''
+    Function that plots a map of the North Atlantic region indicating the locations of the positive and negative correlation region
+    '''
+    fsize = 13
+    
+    # Obtain correlation
+    corr = xr.corr(pres_corr, tg_corr, dim='time')
+
+
+    # Select proxy region
+    dang_coords_np = np.array([[-0.1, 54.9], [40.1, 54.9], [40.1, 75.1], [-0.1, 75.1]])
+    dang_coords_pp = np.array([[-20.1, 24.9], [20.1, 24.9], [20.1, 45.1], [-20.1, 45.1]])
+
+    dang_regions = regionmask.Regions([dang_coords_np, dang_coords_pp], numbers = [1,2], 
+                                          names=["Negative correlation\n area", "Positive correlation\n area"], abbrevs=["NP", "PP"], 
+                                          name="Dangendorf regions")
+
+    # Plot the map
+    fig = plt.figure(figsize=(8,16))
+    ax = plt.axes(projection=ccrs.Robinson())
+    ax.set_extent([-35, 45, 20, 80], crs=ccrs.PlateCarree())
+
+    plot = corr.sel(station = 'Average').plot(ax=ax, transform = ccrs.PlateCarree(), vmin = -0.6, vmax = 0.6, 
+                                              cmap = 'RdBu_r', add_colorbar=False)
+    cb = plt.colorbar(plot, orientation="vertical", shrink = 0.25)                                   
+    cb.set_label(label='R$^2$', size=15)
+    cb.ax.tick_params(labelsize=15)                                
+    ax.set_title('')
+    ax.coastlines(resolution = '50m', linewidth=.7, color = 'k')
+    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels = True, linewidth = .7, color='k', alpha = .7)
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.xlabel_style = {'size': 15}
+    gl.ylabel_style = {'size': 15}
+    gl.ylocator = mticker.FixedLocator([30, 40, 50, 60, 70])
+    
+    dang_regions.plot(ax = ax, label = 'name', line_kws = {'color':'snow', 'lw':3.1}, text_kws = dict(bbox=dict(color="none"), fontsize = 15, color = 'snow'))
+
+    plt.tight_layout()
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/dang_regions_{data_type}_{year_start}_{year_final}.png', bbox_inches='tight', dpi = 500)
+
+    
+    
+    
+def dangendorf_all_stations_corr(pres_corr, tg_corr, data_type, year_start = 1950, year_final = 2015, period = 'fullperiod'):
+    
+    
+    # Obtain correlation
+    corr = xr.corr(pres_corr, tg_corr, dim='time')
+    
+    cols = 4
+    rows = 2
+
+    fig, axs = plt.subplots(rows, cols, figsize=(12, 6), subplot_kw = {'projection' : ccrs.Robinson(0)})
+
+    for i in range(rows):
+
+            for j in range (cols):
+
+                if i == (rows-1) and (j == 3):
+                    fig.delaxes(axs[i,j])
+
+
+                else:
+                    ax = axs[i,j]
+
+                    fg = corr.sel(station = stations[cols*i+j]).plot(ax=ax, transform = ccrs.PlateCarree(), add_colorbar = False, 
+                                                                     vmin = -0.6, vmax = 0.6, cmap = 'RdBu_r')
+
+                    ax.set_extent([-35, 45, 20, 80], ccrs.PlateCarree())
+
+                    if j == 0 and i == 0:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = True, linewidth=.7, color='k', alpha = .7)
+                        gl.top_labels = False
+                        gl.bottom_labels = False
+                        gl.right_labels = False
+                        gl.ylocator = mticker.FixedLocator([30, 40, 50, 60, 70])
+                    elif j == 0 and i == 1:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = True, linewidth=.7, color='k', alpha = .7)
+                        gl.top_labels = False
+                        gl.right_labels = False
+                        gl.ylocator = mticker.FixedLocator([30, 40, 50, 60, 70])
+                    elif i == 1:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = True, linewidth=.7, color='k', alpha = .7)
+                        gl.top_labels = False
+                        gl.right_labels = False
+                        gl.left_labels = False
+                    else:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = False, linewidth=.7, color='k', alpha = .7)
+
+
+                    ax.coastlines()
+
+    
+    cbar_ax = fig.add_axes([1.01, 0.2, 0.02, 0.6])
+    cbar = fig.colorbar(fg, cax = cbar_ax, orientation = 'vertical')
+    cbar.set_label('R$^2$ [-]')
+    
+    #plt.tight_layout()
+
+
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/Dangendorf/{data_type}/dangendorf_corr_all_stations_{year_start}_{year_final}', bbox_inches='tight', dpi = 500)
+
+    
+    
+    
+def nearestpoint_all_stations_corr(corr, data_type, year_start = 1950, year_final = 2015, period = 'fullperiod'):
+    
+    
+    cols = 4
+    rows = 2
+
+    fig, axs = plt.subplots(rows, cols, figsize=(12, 6), subplot_kw = {'projection' : ccrs.Robinson(0)})
+
+    for i in range(rows):
+
+            for j in range (cols):
+
+                if i == (rows-1) and (j == 3):
+                    fig.delaxes(axs[i,j])
+
+
+                else:
+                    ax = axs[i,j]
+
+                    fg = corr.sel(station = stations[cols*i+j]).plot(ax=ax, transform = ccrs.PlateCarree(), add_colorbar = False, 
+                                                                     vmin = -0.6, vmax = 0.6, cmap = 'RdBu_r')
+
+                    ax.set_extent([-35, 30, 40, 80], ccrs.PlateCarree())
+
+                    if j == 0 and i == 0:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = True, linewidth=.7, color='k', alpha = .7)
+                        gl.top_labels = False
+                        gl.right_labels = False
+                        gl.ylocator = mticker.FixedLocator([40, 50, 60, 70, 80])
+                    elif j == 0 and i == 1:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = True, linewidth=.7, color='k', alpha = .7)
+                        gl.top_labels = False
+                        gl.right_labels = False
+                        gl.ylocator = mticker.FixedLocator([40, 50, 60, 70, 80])
+                    else:
+                        gl = ax.gridlines(crs = ccrs.PlateCarree(), draw_labels = True, linewidth=.7, color='k', alpha = .7)
+                        gl.top_labels = False
+                        gl.right_labels = False
+                        gl.left_labels = False
+
+
+                    ax.coastlines()
+
+    
+    cbar_ax = fig.add_axes([1.01, 0.2, 0.02, 0.6])
+    cbar = fig.colorbar(fg, cax = cbar_ax, orientation = 'vertical')
+    cbar.set_label('R$^2$ [-]')
+    
+    #plt.tight_layout()
+
+
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/NearestPoint/{data_type}/nearestpoint_corr_all_stations_{year_start}_{year_final}', bbox_inches='tight', dpi = 500)
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -420,7 +907,7 @@ MODEL DATA
 
 """
 
-def plot_zos_data_per_station(data, data_type):
+def plot_zos_data_per_station(data, data_type, period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 zos model data for each station
     
@@ -429,13 +916,13 @@ def plot_zos_data_per_station(data, data_type):
     
     data.plot.line(x='time', hue = 'model', col = 'station', col_wrap=3, add_legend=False, figsize = (18, 6), sharex=False)
     
-    plt.savefig('/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/zos_per_station.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/zos_per_station.png', bbox_inches='tight')
     
 
     
 
 
-def plot_zos_data_per_model(zos, data_type, station='Average'):
+def plot_zos_data_per_model(zos, data_type, station='Average', period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 zos model data for each model
     For station choose ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
@@ -444,7 +931,7 @@ def plot_zos_data_per_model(zos, data_type, station='Average'):
     zos = zos.zos.sel(station=station)
     
     cols = 4
-    rows = 9
+    rows = 7
     
     
     fig, axs = plt.subplots(rows, cols, figsize=(18, 18))
@@ -464,13 +951,13 @@ def plot_zos_data_per_model(zos, data_type, station='Average'):
 
         
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{data_type}/zos_per_model.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{data_type}/zos_per_model.png', bbox_inches='tight')
 
     
     
     
     
-def plot_zos_data_per_model_allstations(zos, data_type):
+def plot_zos_data_per_model_allstations(zos, data_type, period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 zos model data for each model
     
@@ -503,19 +990,19 @@ def plot_zos_data_per_model_allstations(zos, data_type):
                 plt.tight_layout()
 
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{data_type}/zos_per_model_allstations.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{data_type}/zos_per_model_allstations.png', bbox_inches='tight')
 
 
 
 
-def plot_cmip6_wind_data_per_model(data, wind_model, data_type, station = 'Average', tim_region = 'South'):
+def plot_cmip6_wind_data_per_model(data, wind_model, data_type, station = 'Average', tim_region = 'South', period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 wind model data for each model
     For station choose ['Vlissingen', 'Hoek v. Holland', 'Den Helder', 'Delfzijl', 'Harlingen', 'IJmuiden', 'Average']
     For region choose ['Channel', 'South', 'Mid-West', 'Mid-East', 'North-West', 'North-East']
     """
     cols = 4
-    rows = 9
+    rows = 7
     
     
     if wind_model == 'NearestPoint' or wind_model == 'Timmerman':
@@ -570,10 +1057,10 @@ def plot_cmip6_wind_data_per_model(data, wind_model, data_type, station = 'Avera
         
     
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{wind_model}/wind_per_model_{data_type}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_model}/wind_per_model_{data_type}.png', bbox_inches='tight')
 
 
-def plot_cmip6_pres_data(data, variable, model, data_type):
+def plot_cmip6_pres_data(data, variable, model, data_type, period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 wind model data for each station
     
@@ -586,11 +1073,11 @@ def plot_cmip6_pres_data(data, variable, model, data_type):
     if variable == 'Positive corr region':
         plt.title(f'Annual cmip6 ({data_type}) positive correlated atmospheric proxy')
     plt.ylabel(f'ps [Pa]')
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{model}/{variable}_per_station_{data_type}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{model}/{variable}_per_station_{data_type}.png', bbox_inches='tight')
      
 
     
-def plot_cmip6_two_variables(data, var1, var2, data_type):
+def plot_cmip6_two_variables(data, var1, var2, data_type, period = 'fullperiod'):
     """
     Function to make a lineplot of all cmip6 wind model data for each station
     
@@ -600,12 +1087,12 @@ def plot_cmip6_two_variables(data, var1, var2, data_type):
     
     xr.plot.scatter(data, var1, var2, hue='model', col='station', col_wrap=3, sharex = False, figsize=(10,8))
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{var1}_{var2}_per_station_{data_type}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{var1}_{var2}_per_station_{data_type}.png', bbox_inches='tight')
     
     
     
     
-def plot_cmip6_result_per_station(data, variable, data_type):
+def plot_cmip6_result_per_station(data, variable, data_type, period = 'fullperiod'):
     """
     Function to make a scatter plot of all cmip6 wind model data for all models per station for a specific variable
     
@@ -619,10 +1106,10 @@ def plot_cmip6_result_per_station(data, variable, data_type):
     plt.legend(bbox_to_anchor=(1.05, 1), ncol=2)
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{variable}_per_station_{data_type}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{variable}_per_station_{data_type}.png', bbox_inches='tight')
     
     
-def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['wind_total']):
+def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['wind_total'], period = 'fullperiod'):
     """
     Function to make a plot of the zos timeseries and regression result for each station for a specific model
     For model choose timeseries.model.values[i]
@@ -643,7 +1130,7 @@ def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['
         for variab in var:
             ax.plot(timeseries.time.values, timeseries[variab].sel(model=model, station = zos.station.values[2*i]))
         ax.set_title(f'station={zos.station.values[2*i]}, model={model}')
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('SLH [cm]')
         ax.set_ylim(-13,13)
         plt.tight_layout()
@@ -659,14 +1146,14 @@ def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['
             for variab in var:
                 ax.plot(timeseries.time.values, timeseries[variab].sel(model=model, station = zos.station.values[2*i+1]))
             ax.set_title(f'station={zos.station.values[2*i+1]}, model={model}')
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylabel('SLH [cm]')
             ax.set_ylim(-13,13)
             plt.tight_layout()
     
     labels = ['zos']+var
     fig.legend(labels=labels, loc=(0.57, 0.1))
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/timeseries_per_station_{model}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/timeseries_per_station_{model}.png', bbox_inches='tight')
     
 
     
@@ -681,7 +1168,7 @@ def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['
 
 
 
-def plot_cmip6_trends_timeseries_per_station_model_averages(zos, timeseries, var, wind_model, data_type, errorbar = True):
+def plot_cmip6_trends_timeseries_per_station_model_averages(zos, timeseries, var, wind_model, data_type, errorbar = True, period = 'fullperiod'):
     """
     Function to make a plot of the trends over the whole timeseries of both 
     tide gauge observations and regression results per station averaged over all models
@@ -727,19 +1214,19 @@ def plot_cmip6_trends_timeseries_per_station_model_averages(zos, timeseries, var
 
     plt.xlabel('station')
     if errorbar == True:
-        plt.ylabel('Linear trend $\pm1\sigma$ [cm/y] ')
+        plt.ylabel('Linear trend $\pm1\sigma$ [cm/yr] ')
     else:
-        plt.ylabel('Linear trend [cm/y] ')
+        plt.ylabel('Linear trend [cm/yr] ')
     plt.tight_layout()
     plt.title('Trend per station averaged over all models')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.axhline(color='k', linestyle='--')
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{wind_model}/timeseries_trends_per_station_{data_type}.png')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_model}/timeseries_trends_per_station_{data_type}.png', bbox_inches='tight')
     
     
     
 
-def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wind_reg_model, station = 'Average'):
+def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wind_reg_model, station = 'Average', period = 'fullperiod'):
     """
     
     Function to make a plot of the zos timeseries and regression results for all cmip6 models, for one station and for all 
@@ -766,10 +1253,10 @@ def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wi
     y_min = 15
     y_max = -15
     
-    fig, axs = plt.subplots(9, 4, figsize=(24, 20))
+    fig, axs = plt.subplots(7, 4, figsize=(24, 20))
 
 
-    for i in range(9):
+    for i in range(7):
 
         for j in range(4):
             ax = axs[i,j]
@@ -780,7 +1267,7 @@ def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wi
             for label in labels:
                 ax.plot(timeseries.time.values, timeseries[label].sel(station = station, model = models[4*i+j]).values)
 
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylabel('zos [cm]')
             ax.axhline(color='k', linestyle='--', linewidth = 1)
             ax.set_title('model = ' + models[4*i+j])
@@ -792,7 +1279,7 @@ def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wi
                 labels_leg = ['zos'] + labels
                 ax.legend(labels = labels_leg)
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/cmip6/{wind_reg_model}/zos_timeseries_one_model_{station}_showzos_smoothed')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_reg_model}/zos_timeseries_one_model_{station}_showzos_smoothed', bbox_inches='tight')
      
     
  

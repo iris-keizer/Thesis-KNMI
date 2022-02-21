@@ -18,9 +18,13 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import regionmask
+
 import statsmodels.api as sm
 import statsmodels as sm
+
 from scipy.signal import detrend
+
+
 
 
 """
@@ -75,13 +79,30 @@ def cmip6_np_coords():
     """
     Function to obtain a dataframe containing the coordinates of cmip6 nearest points to tide gauge models
     """
-    lat_lst = [51.5, 51.5, 52.5, 53.5, 53.5, 52.5]
+    lat_lst = [51.5, 52.5, 52.5, 53.5, 53.5, 52.5]
     lon_lst = [3.5, 4.5, 4.5, 6.5, 5.5, 4.5]
     df = pd.DataFrame({'station' : stations[:-1], 'lat' : lat_lst, 'lon' : lon_lst})
     df = df.set_index('station')
     
     return df
+
+
+def obs_np_coords(data_type = 'era5'): 
+    """
+    Function to obtain a dataframe containing the coordinates of observed nearest points above sea to tide gauge models
+    """
+    if data_type == 'era5':
+        lat_lst = [51.5, 52.0, 53.0, 53.5, 53.25, 52.5]
+        lon_lst = [3.5, 4.0, 4.75, 7.0, 5.25, 4.5]
+    elif data_type == '20cr':
+        lat_lst = [52, 52, 53, 54, 53, 52]
+        lon_lst = [4, 4, 5, 7, 5, 4]
+        
+    df = pd.DataFrame({'station' : stations[:-1], 'lat' : lat_lst, 'lon' : lon_lst})
+    df = df.set_index('station')
     
+    return df
+
 
 def save_nc_data(data, folder, variable, name): 
     """
@@ -111,12 +132,12 @@ def timmerman_regions():
     
     # Declare regions using coordinates
     # As first coordinates take most South-West point and than go anti-clockwise
-    Channel = np.array([[-5.1, 48.6], [1.5, 50.1], [1.5, 50.9], [-5.1, 49.9]])
+    Channel = np.array([[-5.1, 48.6], [1.5, 50.1], [1.5, 50.9], [-5.1, 50.1]])
     South = np.array([[0.5, 50.8], [3.2, 51.3], [5.3, 53.1], [1.7, 52.3]])
     Mid_West = np.array([[1.7, 52.3], [5.3, 53.1], [3.7, 55.7], [-1.3, 55.1], [0.5, 53.1], [1.8, 52.7]])
     Mid_East = np.array([[5.3, 53.1], [8.9, 53.9], [7.8, 57.0], [3.7, 55.7]])
     North_West = np.array([[-1.3, 55.1], [3.7, 55.7], [1.1, 59.3], [-3.0, 58.7], [-1.7, 57.5], [-1.5, 55.5]])
-    North_East = np.array([[3.7, 55.7], [7.8, 57.0], [7.4, 58.0], [6.1, 58.6], [4.9, 60.3], [1.1, 59.3]])
+    North_East = np.array([[3.7, 55.7], [7.8, 57.0], [7.6, 58.1], [6.1, 58.6], [4.9, 60.3], [1.1, 59.3]])
     
     
     # Declare names, abbreviations and numbers
@@ -152,8 +173,8 @@ def nodal_tides_potential(lat, time_years):
 def get_proxies(pres):
     
     # Select proxy region
-    dang_coords_np = np.array([[-8, 55], [23, 55], [23, 70], [-8, 70]])
-    dang_coords_pp = np.array([[-15, 28], [7, 28], [7, 43], [-15, 43]])
+    dang_coords_np = np.array([[-0.1, 54.9], [40.1, 54.9], [40.1, 75.1], [-0.1, 75.1]])
+    dang_coords_pp = np.array([[-20.1, 24.9], [20.1, 24.9], [20.1, 45.1], [-20.1, 45.1]])
         
     
     dang_regions = regionmask.Regions([dang_coords_np, dang_coords_pp], numbers = [1,2], 
@@ -214,6 +235,7 @@ def new_df_obs_wind_per_var(data, variable  = 'u$^2$', model = 'NearestPoint'):
     else: print('For model choose [NearestPoint, Timmerman]' )
 
         
+        
 def get_frac(window, data, dtype='DataFrame'):
     if dtype == 'DataFrame':
         frac = window / (data.index[-1]-data.index[0])
@@ -225,6 +247,17 @@ def get_frac(window, data, dtype='DataFrame'):
 
 
 
+def detrend_dim(da, dim, deg=1):
+    '''
+    Function that detrends the data from a dataarray
+    deg = 1 for a linear fit
+    '''
+    
+    p = da.polyfit(dim=dim, deg=deg)
+    coord = da.year - da.year.values[0]
+    trend = coord*p.polyfit_coefficients.sel(degree=1)
+    
+    return da - trend
 
 
 
@@ -235,16 +268,14 @@ regions = timmerman_region_names()
 lowess = sm.nonparametric.smoothers_lowess.lowess
 
 
-# Only use models occuring in both datasets
-models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'BCC-ESM1',
-       'CAMS-CSM1-0', 'CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2',
-       'CNRM-CM6-1', 'CNRM-ESM2-1', 'CanESM5', 'CanESM5-CanOE',
-       'EC-Earth3', 'EC-Earth3-AerChem', 'EC-Earth3-CC', 'EC-Earth3-Veg',
-       'EC-Earth3-Veg-LR', 'FGOALS-f3-L', 'GFDL-CM4', 'GFDL-ESM4',
-       'GISS-E2-1-G', 'GISS-E2-1-H', 'HadGEM3-GC31-LL', 'HadGEM3-GC31-MM',
-       'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR', 'MIROC-ES2L', 'MIROC6',
-       'MPI-ESM-1-2-HAM', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
-       'NESM3', 'NorCPM1', 'UKESM1-0-LL']
+# Only use models occuring in zos, uas, vas and ps datasets for all scenarios
+models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0',
+       'CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2', 'CNRM-CM6-1', 'CNRM-ESM2-1',
+       'CanESM5', 'CanESM5-CanOE', 'EC-Earth3', 'EC-Earth3-Veg',
+       'EC-Earth3-Veg-LR', 'GFDL-ESM4', 'GISS-E2-1-G', 'HadGEM3-GC31-LL',
+       'HadGEM3-GC31-MM', 'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR',
+       'MIROC-ES2L', 'MIROC6', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
+       'NESM3', 'UKESM1-0-LL']
 
 
 
@@ -335,7 +366,6 @@ def import_obs_slh_data(data_type = 'era5'):
 
 
 
-
 def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
     """
     Function that imports the observed wind data based on the preferred wind data model that is used for regression
@@ -367,8 +397,8 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
     
     if model == 'NearestPoint':
         
-        # Obtain coordinates of the tide gauge stations
-        coord_df = station_coords()
+        # Obtain coordinates
+        coord_df = obs_np_coords(data_type)
 
         
         # Create list of wind dataframes 
@@ -441,6 +471,64 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
 
 
 
+
+
+
+
+    
+    
+def import_pres_tg_corr_data(data_type = 'era5', year_start = 1950, year_final = 2015):
+
+
+    # Prepare pressure data
+
+    # Import annual pressure data
+    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/'
+    pres = xr.open_dataset(path + f'Pressure/pres_annual_{data_type}.nc') 
+
+    # Linearly detrend
+    pres_corr = detrend_dim(pres.pressure, dim='year', deg=1)
+    pres_corr = pres_corr.drop('degree')
+    
+    # Rename year to time
+    pres_corr = pres_corr.rename({'year':'time'})
+    
+    # Select time period
+    pres_corr = pres_corr.where(pres_corr.time > year_start - 1, drop = True)
+    pres_corr = pres_corr.where(pres_corr.time < year_final + 1, drop = True)
+    
+    # Prepare tide gauge data
+
+    # Import tide gauge data
+    tg = import_obs_slh_data()
+
+    # Linearly detrend
+    data = []
+
+    for station in tg.columns:
+        data.append(detrend(tg[station]))
+
+    # Create dataarray of tide gauge data
+    tg_corr = xr.DataArray(data, dims = ['station', 'time'], coords = dict(time = tg.index, station = tg.columns))
+
+    # Select time period
+    tg_corr = tg_corr.where(pres_corr.time > year_start - 1, drop = True)
+    tg_corr = tg_corr.where(pres_corr.time < year_final + 1, drop = True)
+
+    return pres_corr, tg_corr
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 """

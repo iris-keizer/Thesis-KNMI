@@ -158,7 +158,7 @@ def plot_tg_data(data):
     
     data.plot(figsize=(9,3), title='Tide gauge time series', 
               ylabel = 'Sea level height above NAP [cm]',
-             xlabel = 'Time [y]')
+             xlabel = 'Time [yr]')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.tight_layout()
     plt.axhline(color='grey', linestyle='--')
@@ -178,7 +178,7 @@ def plot_obs_wind_data(data, model, data_type):
     u2_df = new_df_obs_wind_per_var(data, model = model)
     u2_df.plot(figsize=(9,3), title=f'Annual zonal wind stress ({data_type})', 
               ylabel = 'u$^2$ [m$^2$/s$^2$]',
-             xlabel = 'Time [y]')
+             xlabel = 'Time [yr]')
     plt.tight_layout()
     plt.axhline(color='grey', linestyle='--')
     plt.legend(bbox_to_anchor=(1, 1))
@@ -188,7 +188,7 @@ def plot_obs_wind_data(data, model, data_type):
     v2_df = new_df_obs_wind_per_var(data, variable = 'v$^2$', model = model)
     v2_df.plot(figsize=(9,3), title=f'Annual meridional wind stress ({data_type})', 
               ylabel = 'v$^2$ [m$^2$/s$^2$]',
-             xlabel = 'Time [y]')
+             xlabel = 'Time [yr]')
     plt.tight_layout()
     plt.axhline(color='grey', linestyle='--')
     plt.legend(bbox_to_anchor=(1, 1))
@@ -203,7 +203,7 @@ def plot_obs_pres_data(data, model, data_type):
     
     data.plot(figsize=(9,3), title='Annual observed atmospheric proxies', 
               ylabel = 'Regional averaged sea level pressure [Pa]',
-             xlabel = 'Time [y]')
+             xlabel = 'Time [yr]')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.tight_layout()
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Smoothed wind contribution/observations/{model}/{data_type}/obs_pres_data.png')
@@ -254,7 +254,7 @@ def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type):
         for variab in var:
             ax.plot(timeseries.index.values, timeseries[stations[2*i], variab].values)
         ax.set_title(f'station='+stations[2*i])
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         ax.set_ylabel('SLH [cm]')
         ax.set_ylim(-20,20)
         plt.tight_layout()
@@ -269,7 +269,7 @@ def plot_obs_timeseries_per_station(tg_data, timeseries, var, model, data_type):
             for variab in var:
                 ax.plot(timeseries.index.values, timeseries[stations[2*i], variab].values)
             ax.set_title(f'station='+stations[2*i])
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylabel('SLH [cm]')
             ax.set_ylim(-20,20)
             plt.tight_layout()
@@ -309,7 +309,7 @@ def plot_obs_trends_timeseries_per_station(tg_data, timeseries, var, model, data
         plt.errorbar(stations, trend_lst, yerr=se_lst, fmt="o", label = variab)
 
     plt.xlabel('station')
-    plt.ylabel('Linear trend $\pm1\sigma$ [cm/y] ')
+    plt.ylabel('Linear trend $\pm1\sigma$ [cm/yr] ')
     plt.tight_layout()
     plt.legend(bbox_to_anchor=(1, 1))
     plt.axhline(color='grey', linestyle='--')
@@ -356,11 +356,11 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
                 
                 
         ax.set_title(f'station={stations[2*i]} \n linear trends over {time_period} years')
-        ax.set_xlabel('time [y]')
+        ax.set_xlabel('Time [yr]')
         if errorbar == True:
-            ax.set_ylabel('linear trend [cm/year]\n $\pm 1\sigma$')
+            ax.set_ylabel('linear trend [cm/yr]\n $\pm 1\sigma$')
         else:
-            ax.set_ylabel('linear trend [cm/year]')
+            ax.set_ylabel('linear trend [cm/yr]')
                 
         ax.set_ylim(-0.1,0.4)
         ax.axhline(color='grey', linestyle='--')
@@ -385,7 +385,7 @@ def plot_obs_decadal_trends_timeseries_per_station(tg_data, timeseries, var, tim
                     ax.scatter(years, trends, marker='.', label = variab, s=size)
                 
             ax.set_title(f'station={stations[2*i]} \n linear trends over {time_period} years')
-            ax.set_xlabel('time [y]')
+            ax.set_xlabel('Time [yr]')
             ax.set_ylim(-0.1,0.4)
             ax.axhline(color='grey', linestyle='--')
     

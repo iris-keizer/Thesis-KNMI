@@ -40,7 +40,7 @@ def plot_df_timeseries(data_df, ylabel = 'No label given', title = 'No title giv
     As an option, a lowess smoothing can be applied
     '''
     
-    fsize = 12
+    fsize = 13
     
     plt.figure(figsize = (9,3))
     
@@ -49,13 +49,16 @@ def plot_df_timeseries(data_df, ylabel = 'No label given', title = 'No title giv
         plt.title(f'{title}', fontsize = fsize)
         
     plt.xlim(1835, 2021)
-    plt.legend(bbox_to_anchor=[1.04, 0.75])
-    plt.xlabel('time [y]', fontsize = fsize)
+    plt.xticks(fontsize = fsize)
+    plt.yticks(fontsize = fsize)
+    plt.legend(fontsize = fsize)
+    plt.xlabel('Time [yr]', fontsize = fsize)
     plt.ylabel(f'{ylabel}', fontsize = fsize)
-    plt.axhline(color='k', linestyle='--', linewidth = 0.9)  
+    plt.axhline(color='grey', linestyle='--')  
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_{title}_{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_{title}_{window}', 
+                bbox_inches = 'tight', dpi = 500)
 
     
     
@@ -101,17 +104,17 @@ def plot_ac_cmip6_timeseries(data_df, ylabel = 'No label given', window = 21, ym
             ax.set_ylim(ymin, ymax)
             
             if i == 0 and j == 2:
-                ax.legend(labels = wind_labels)
+                ax.legend(labels = wind_labels, loc = 'upper right')
             
             if j == 0:
                 ax.set_ylabel(ylabel, fontsize = fsize)
                 
             if i == n_row - 1:
-                ax.set_xlabel('time [y]')
+                ax.set_xlabel('time [yr]', fontsize = fsize)
         
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_ac_{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_ac_{window}', dpi = 500)
 
     
 def plot_amv_cmip6_timeseries(data_df, ylabel = 'No label given', window = 21, ymin = -6, ymax = 12):
@@ -152,18 +155,16 @@ def plot_amv_cmip6_timeseries(data_df, ylabel = 'No label given', window = 21, y
                 
             ax.set_ylim(ymin, ymax)
             
-            if i == 0 and j == 2:
-                ax.legend(labels = wind_labels)
             
             if j == 0:
                 ax.set_ylabel(ylabel, fontsize = fsize)
                 
             if i == n_row - 1:
-                ax.set_xlabel('time [y]')
+                ax.set_xlabel('time [yr]')
         
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_amv_{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_amv_{window}', dpi = 500)
     
     
     
@@ -175,39 +176,42 @@ def plot_era5_20cr_timeseries(data_era5, data_20cr, window = 21):
     '''
     Function to make a plot of both era5 and 20cr atmospheric contribution time series
     '''
-    fsize = 12
+    fsize = 13
     
     colors = ['tab:blue', 'tab:orange', 'tab:green']
     
     plt.figure(figsize = (9,3))
     
     for i, column in enumerate(data_era5.columns):
-        plt.plot(data_20cr.index, data_20cr[column], color = colors[i], label = column + ' - 20CR', alpha = 0.6)
-        plt.plot(data_era5.index, data_era5[column], color = colors[i], label = column + ' - ERA5')
+        plt.plot(data_20cr.index, data_20cr[column], color = colors[i], alpha = 0.6)
+        plt.plot(data_era5.index, data_era5[column], color = colors[i], label = column)
             
-        plt.title(f'Atmospheric contribution to mean sea-level', fontsize = fsize)
+        #plt.title(f'Atmospheric contribution to sea level change', fontsize = fsize)
             
             
     plt.xlim(1835, 2021)
-    plt.legend(bbox_to_anchor=[1.04, 0.75])
-    plt.xlabel('time [y]', fontsize = fsize)
-    plt.ylabel('sea-level contribution [cm]', fontsize = fsize)
-    plt.axhline(color='k', linestyle='--', linewidth = 0.9)  
+    plt.legend(loc = 'upper left', fontsize = fsize)
+    plt.xlabel('Time [yr]', fontsize = fsize)
+    plt.ylabel('Atmospheric contribution [cm]', fontsize = fsize)
+    plt.axhline(color='grey', linestyle='--')  
+    plt.xticks(fontsize = fsize)
+    plt.yticks(fontsize = fsize)
     plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_era5&20cr_{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_era5&20cr_{window}', 
+                bbox_inches = 'tight', dpi = 500)
     
     
     
-def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21):
+def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
     '''
     Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
     
     '''
-    fsize = 12
+    fsize = 15
     
-    fig, axs = plt.subplots(3, 2, figsize = (15,8))
+    fig, axs = plt.subplots(3, 2, figsize = (10,6))
     
     for i, wm in enumerate(wind_labels):
         
@@ -219,16 +223,16 @@ def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.
             ax.scatter(dataT.index, dataT[var].values)
         
         if i == 2:
-            ax.set_xlabel('lag [y]', fontsize=fsize)
-            
-        ax.set_ylabel(ylabel, fontsize=fsize)
+            ax.set_xlabel('Lag [yr]', fontsize=fsize)
+        if i ==1: 
+            ax.set_ylabel(ylabel + f'\n{wind_labels[i]}', fontsize=fsize)
+        else:
+            ax.set_ylabel(wind_labels[i], fontsize=fsize)
         ax.set_ylim(ymin, ymax)
-        ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
+        ax.axhline(color='grey', linestyle='--')  
         
         if i == 0:
-            ax.set_title(f'ERA5 \n {wind_labels[i]}', fontsize=fsize)
-        else:
-            ax.set_title(wind_labels[i], fontsize=fsize)
+            ax.set_title(f'ERA5', fontsize=fsize)
         
         ax = axs[i,1]
         data_20cr = results_20cr.swaplevel(0,1, axis=1)[wm]
@@ -237,26 +241,28 @@ def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.
             dataT = data_20cr[column].T
             ax.scatter(dataT.index, dataT[var].values)
         ax.set_ylim(ymin, ymax)
-        ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
+        ax.axhline(color='grey', linestyle='--')   
         
         if i == 2:
-            ax.set_xlabel('lag [y]', fontsize=fsize)
+            ax.set_xlabel('Lag [yr]', fontsize=fsize)
         
         if i == 0:
-            ax.legend(labels = AMV_names)
-            ax.set_title(f'20CRv3 \n {wind_labels[i]}')
-        else:
-            ax.set_title(wind_labels[i])
+            ax.legend(labels = AMV_names, loc = location)
+            ax.set_title(f'20CRv3', fontsize=fsize)
+            
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/results_{var}_{window}')
+    if var == 'r$^2$':
+        var = 'r2'
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/results_{var}_{window}', dpi = 500)
  
 
 
 
 
     
-def plot_result_cmip6(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21):
+def plot_result_cmip6(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
     '''
     Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
     
@@ -296,14 +302,14 @@ def plot_result_cmip6(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 
                 ax.set_ylabel(ylabel, fontsize = fsize)
                 
             if i == n_row - 1:
-                ax.set_xlabel('lag [y]', fontsize = fsize)
+                ax.set_xlabel('lag [yr]', fontsize = fsize)
                 
             if i == 0 and j == 2:
-                ax.legend(labels = wind_labels, loc='upper right')
+                ax.legend(labels = wind_labels, loc=location)
     
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/results_cmip6_{var}_{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/results_cmip6_{var}_{window}', dpi = 500)
     
    
     
@@ -314,10 +320,10 @@ def plot_timeseries(timeseries, data, lags, data_type, window = 21, ymin = -1.1,
     
     n_row = len(lags)
     n_col = 3
-    fsize = 14
+    fsize = 15
     
     
-    fig, axs = plt.subplots(n_row, n_col, figsize = (18,2.8*n_row))
+    fig, axs = plt.subplots(n_row, n_col, figsize = (12,2*n_row))
     
     
     for i in range(n_row):
@@ -327,29 +333,30 @@ def plot_timeseries(timeseries, data, lags, data_type, window = 21, ymin = -1.1,
             
             ax = axs[i,j]
             ax.set_ylim(ymin,ymax)
-            ax.plot(data.index, data[wind_labels[j]].values, color = 'gray', label = 'Dependent variable')
-            ax.axhline(color='k', linestyle='--', linewidth = 0.9)  
+            ax.plot(data.index, data[wind_labels[j]].values, color = 'k', label = 'Wind influence')
+            ax.axhline(color='grey', linestyle='--')  
             
             for name in AMV_names:
                 ts = timeseries[name, wind_labels[j], lags[i]]
                 ax.plot(ts.index, ts.values, label = name)
                 
                 
-            if j == 0:
-                ax.set_ylabel('Atmospheric contribution\n to sea-level [cm]', fontsize=fsize)
-                ax.legend(loc='lower left')
+            if j == 0 and i == 1:
+                ax.set_ylabel('Sea level change [cm]', fontsize=fsize)
+            if j==0 and i ==0:
+                ax.legend(loc='upper left')
                 
             if i == 0:
-                ax.set_title(f'{wind_labels[j]}\nlag = {lags[i]} y', fontsize=fsize) 
+                ax.set_title(f'{wind_labels[j]}\nlag = {lags[i]} yr', fontsize=13) 
             else:
-                ax.set_title(f'lag = {lags[i]} y', fontsize=fsize) 
+                ax.set_title(f'lag = {lags[i]} yr', fontsize=13) 
                 
             if i == n_row-1:
-                ax.set_xlabel('time [y]', fontsize=fsize)
+                ax.set_xlabel('Time [yr]', fontsize=fsize)
     plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_{data_type}_window{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_{data_type}_window{window}', dpi = 500)
     
     
     
@@ -392,7 +399,7 @@ def plot_timeseries_cmip6_onelag_allmodels(timeseries, lag = 0, window = 21, ymi
                 ax.set_ylabel('AMV influence\n on wind influence\n on sea level change [cm]', fontsize = fsize)
                 
             if i == n_row - 1:
-                ax.set_xlabel('time [y]', fontsize = fsize)
+                ax.set_xlabel('time [yr]', fontsize = fsize)
                 
             if i == 0 and j == 2:
                 ax.legend(labels = wind_labels, loc='upper right')
@@ -402,6 +409,63 @@ def plot_timeseries_cmip6_onelag_allmodels(timeseries, lag = 0, window = 21, ymi
                     
                     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_allmodels_lag{lag}_window{window}')
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_allmodels_lag{lag}_window{window}', 
+                dpi = 500)
+    
+
+    
+def plot_timeseries_cmip6_onelag_allmodels_originaldata(timeseries, original_data, lag = 0, window = 21, ymin = -1.1, ymax = 2.1):
+    
+    models = list(timeseries.swaplevel(0,2,axis=1)[0]['NearestPoint'].columns)
+    
+    
+    fsize = 12
+    
+    
+    n_col = 3
+    n_row = len(models)
+    
+    
+    fig, axs = plt.subplots(n_row, n_col, figsize=(18, 2.5*n_row))
+    
+    
+    
+    for i in range(n_row):
+
+        for j in range(n_col):
+            
+            ax = axs[i,j]
+                
+            data = timeseries[models[i]].swaplevel(0,1,axis=1)[lag]
+            ax.plot(original_data.index, original_data[wind_labels[j], models[i]].values, color = 'grey')
+            ax.plot(data.index, data[wind_labels[j]].values)
+            ax.axhline(color='k', linestyle='--', linewidth = 0.9)
+            ax.set_ylim(ymin, ymax)
+            
+            
+            
+            if i == 0 and j == 0:
+                ax.set_title(f'{models[i]} - {wind_labels[j]}', fontsize = fsize)
+            elif j == 0:
+                ax.set_title(f'{models[i]}', fontsize = fsize)
+            elif i == 0:
+                ax.set_title(f'{wind_labels[j]}', fontsize = fsize)
+            
+            if j == 0:
+                ax.set_ylabel('AMV influence\n on wind influence\n on sea level change [cm]', fontsize = fsize)
+                
+            if i == n_row - 1:
+                ax.set_xlabel('time [yr]', fontsize = fsize)
+            '''    
+            if i == 0 and j == 2:
+                ax.legend(labels = ['Original data'] + wind_labels, loc='upper right')
+            '''
+    plt.tight_layout()
+    
+                    
+                    
+    
+    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_allmodels_originaldata_lag{lag}_window{window}',
+                dpi = 500)
     
     

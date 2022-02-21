@@ -17,7 +17,19 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 
+# Only use models occuring in both datasets
+models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0',
+       'CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2', 'CNRM-CM6-1', 'CNRM-ESM2-1',
+       'CanESM5', 'CanESM5-CanOE', 'EC-Earth3', 'EC-Earth3-Veg',
+       'EC-Earth3-Veg-LR', 'GFDL-ESM4', 'GISS-E2-1-G', 'HadGEM3-GC31-LL',
+       'HadGEM3-GC31-MM', 'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR',
+       'MIROC-ES2L', 'MIROC6', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
+       'NESM3', 'UKESM1-0-LL']
 
+best_models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0', 'CanESM5', 
+               'CanESM5-CanOE', 'CMCC-CM2-SR5', 'CMCC-ESM2', 'CNRM-CM6-1', 
+               'EC-Earth3-Veg-LR', 'GFDL-ESM4', 'MIROC-ES2L', 
+                'MPI-ESM1-2-HR', 'NESM3']
 
 
 
@@ -36,21 +48,7 @@ def wind_contr_proj(wind_sce, wind_model = 'NearestPoint', use_models = 'bestmod
     scalers = pickle.load(file)
     
     if use_models == 'bestmodels':
-        # Import best models
-        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
-        models = []
-
-        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
-        # open file and read the content in a list
-        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
-            for line in filehandle:
-                # remove linebreak which is the last character of the string
-                currentPlace = line[:-1]
-
-                # add item to the list
-                models.append(currentPlace)
-    else:
-        models = wind_hist.model.values
+        models = best_models
     
     # Import regression coefficients
     path_reg_results = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/Projections/'

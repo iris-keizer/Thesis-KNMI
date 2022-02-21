@@ -35,8 +35,9 @@ Practical functions
 def df_smooth(df, window):
     df_lo = df.copy()
     
+    frac = window/(df.index.size)
+    
     for column in df:
-        frac = window/df[column].values.size
         df_lo[column] = lowess(df[column].values, df.index.values, frac, return_sorted=False)
         
         
@@ -67,7 +68,7 @@ def import_obs_ac_slh_data(smoothed = False, window = 21):
     
     '''
     
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/'
+    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/fullperiod/'
     
     
     for wl in wind_labels:

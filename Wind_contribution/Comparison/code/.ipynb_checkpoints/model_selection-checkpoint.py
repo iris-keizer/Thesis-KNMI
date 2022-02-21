@@ -28,20 +28,21 @@ import statsmodels as sm
 import matplotlib.pyplot as plt
 
 
-period_min = 20
-period_max = 100
-window = 20 # Smoothing window for lowpass filter
+period_min = 30
+period_max = 110
+window = 31 # Smoothing window for lowpass filter
 lowess = sm.nonparametric.smoothers_lowess.lowess
 
-models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'BCC-ESM1',
-       'CAMS-CSM1-0', 'CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2',
-       'CNRM-CM6-1', 'CNRM-ESM2-1', 'CanESM5', 'CanESM5-CanOE',
-       'EC-Earth3', 'EC-Earth3-AerChem', 'EC-Earth3-CC', 'EC-Earth3-Veg',
-       'EC-Earth3-Veg-LR', 'FGOALS-f3-L', 'GFDL-CM4', 'GFDL-ESM4',
-       'GISS-E2-1-G', 'GISS-E2-1-H', 'HadGEM3-GC31-LL', 'HadGEM3-GC31-MM',
-       'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR', 'MIROC-ES2L', 'MIROC6',
-       'MPI-ESM-1-2-HAM', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
-       'NESM3', 'NorCPM1', 'UKESM1-0-LL']
+models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0',
+       'CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2', 'CNRM-CM6-1', 'CNRM-ESM2-1',
+       'CanESM5', 'CanESM5-CanOE', 'EC-Earth3', 'EC-Earth3-Veg',
+       'EC-Earth3-Veg-LR', 'GFDL-ESM4', 'GISS-E2-1-G', 'HadGEM3-GC31-LL',
+       'HadGEM3-GC31-MM', 'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR',
+       'MIROC-ES2L', 'MIROC6', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
+       'NESM3', 'UKESM1-0-LL']
+
+
+
 
 labels_windmodel = ['NearestPoint', 'Timmerman', 'Dangendorf']
     
@@ -73,7 +74,7 @@ def import_data_model_selection():
     
     
     # Define path
-    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/'
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/fullperiod/'
     
     # Import the files
     np = pd.read_csv(path+f'timeseries_NearestPoint_20cr.csv', header = [0,1,2])
@@ -108,10 +109,10 @@ def import_data_model_selection():
     detrended_timeseries_20cr = df.set_index('time')
     
     
-    # Import CMIP
+    # Import CMIP6
     
     # Define path
-    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/'
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/fullperiod/'
 
 
     # Import the files
@@ -145,6 +146,82 @@ def import_data_model_selection():
     
     
     return detrended_timeseries_20cr, detrended_timeseries_cmip6
+
+
+
+def import_data_model_selection2():
+    # No detrending
+    
+    # Import 20CR observations
+    
+    
+    # Define path
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/fullperiod/'
+    
+    # Import the files
+    np = pd.read_csv(path+f'timeseries_NearestPoint_20cr.csv', header = [0,1,2])
+    tim = pd.read_csv(path+f'timeseries_Timmerman_20cr.csv', header = [0,1,2])
+    dang = pd.read_csv(path+f'timeseries_Dangendorf_20cr.csv', header = [0,1,2])
+    
+    # Set index
+    np = np.set_index(('Unnamed: 0_level_0', 'Unnamed: 0_level_1', 'time'))
+    tim = tim.set_index(('Unnamed: 0_level_0', 'Unnamed: 0_level_1', 'time'))
+    dang = dang.set_index(('Unnamed: 0_level_0', 'Unnamed: 0_level_1', 'time'))
+        
+    # Set index name
+    np.index.names = ['time']
+    tim.index.names = ['time']
+    dang.index.names = ['time']
+            
+            
+    # Drop extra row
+    np = np.droplevel(axis=1, level=2)
+    tim = tim.droplevel(axis=1, level=2)
+    dang = dang.droplevel(axis=1, level=2)
+            
+    
+    # Create one dataframe only containing 'Average' station and wind contribution to SLH
+    # whereof the data is detrended
+    df = pd.DataFrame({'time': np.index.values, 
+                       'NearestPoint': np['Average', 'wind total'],
+                       'Timmerman': tim['Average', 'wind total'], 
+                       'Dangendorf': dang['Average', 'wind total']})
+
+
+    timeseries_20cr = df.set_index('time')
+    
+    
+    # Import CMIP6
+    
+    # Define path
+    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/fullperiod/'
+
+
+    # Import the files
+    np = xr.open_dataset(path+f'timeseries_NearestPoint_historical.nc')
+    tim = xr.open_dataset(path+f'timeseries_Timmerman_historical.nc')
+    dang = xr.open_dataset(path+f'timeseries_Dangendorf_historical.nc')
+        
+    # Select data and create dataframe
+    np = np.wind_total.sel(station='Average', drop = True)
+    tim = tim.wind_total.sel(station='Average', drop = True)
+    dang = dang.wind_total.sel(station='Average', drop = True)
+
+    
+    # Create dataframe
+    np = np.to_pandas().T
+    tim = tim.to_pandas().T
+    dang = dang.to_pandas().T
+    
+    timeseries_cmip6 = pd.concat([np, tim, dang], axis = 1,  keys = ['NearestPoint', 'Timmerman', 'Dangendorf'])
+
+    # Create data of equal time span
+    timeseries_20cr = timeseries_20cr[timeseries_20cr.index.isin(timeseries_cmip6.index.values)]
+    
+    timeseries_cmip6 = timeseries_cmip6[timeseries_cmip6.index.isin(timeseries_20cr.index.values)]
+    
+    
+    return timeseries_20cr, timeseries_cmip6
 
 
     
@@ -423,6 +500,7 @@ def plot_best_models(best_models, timeseries_cmip6):
                                   return_sorted = False)
                     ax.plot(data.index, lws)
                 ax.set_title(best_models[n_row*i+j])
+                ax.set_ylim(-1.5,1.5)
                 if i == n_row-1:
                     ax.set_xlabel('time [y]')
                 if j == 0:

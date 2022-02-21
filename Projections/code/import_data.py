@@ -183,19 +183,23 @@ lowess = sm.nonparametric.smoothers_lowess.lowess
 
 
 # Only use models occuring in both datasets
-models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'BCC-ESM1',
-       'CAMS-CSM1-0', 'CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2',
-       'CNRM-CM6-1', 'CNRM-ESM2-1', 'CanESM5', 'CanESM5-CanOE',
-       'EC-Earth3', 'EC-Earth3-AerChem', 'EC-Earth3-CC', 'EC-Earth3-Veg',
-       'EC-Earth3-Veg-LR', 'FGOALS-f3-L', 'GFDL-CM4', 'GFDL-ESM4',
-       'GISS-E2-1-G', 'GISS-E2-1-H', 'HadGEM3-GC31-LL', 'HadGEM3-GC31-MM',
-       'INM-CM4-8', 'INM-CM5-0', 'IPSL-CM6A-LR', 'MIROC-ES2L', 'MIROC6',
-       'MPI-ESM-1-2-HAM', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 'MRI-ESM2-0',
-       'NESM3', 'NorCPM1', 'UKESM1-0-LL']
+models = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0','CAS-ESM2-0', 'CMCC-CM2-SR5', 'CMCC-ESM2', 
+          'CNRM-CM6-1', 'CNRM-ESM2-1','CanESM5', 'CanESM5-CanOE', 'EC-Earth3', 'EC-Earth3-Veg',
+          'EC-Earth3-Veg-LR', 'GFDL-ESM4', 'GISS-E2-1-G', 'HadGEM3-GC31-LL','HadGEM3-GC31-MM', 'INM-CM4-8', 
+          'INM-CM5-0', 'IPSL-CM6A-LR','MIROC-ES2L', 'MIROC6', 'MPI-ESM1-2-HR', 'MPI-ESM1-2-LR', 
+          'MRI-ESM2-0','NESM3', 'UKESM1-0-LL']
+
+best_models2 = ['ACCESS-CM2', 'ACCESS-ESM1-5', 'BCC-CSM2-MR', 'CAMS-CSM1-0', 'CanESM5', 
+               'CanESM5-CanOE', 'CMCC-CM2-SR5', 'CMCC-ESM2', 'CNRM-CM6-1', 
+               'EC-Earth3-Veg-LR', 'GFDL-ESM4', 'MIROC-ES2L', 
+                'MPI-ESM1-2-HR', 'NESM3']
+
+best_models = ['ACCESS-ESM1-5', 'CAMS-CSM1-0', 'CanESM5-CanOE', 'CNRM-CM6-1', 'EC-Earth3-Veg-LR','GFDL-ESM4']
 
 
 
 
+    
 
 
 """
@@ -215,6 +219,8 @@ def import_cmip6_slh_data(data_type = 'historical', use_models = 'bestmodels'):
     
     """
     
+
+
     
     # Define paths to data
     path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/SLH/slh_annual_{data_type}.nc'
@@ -226,22 +232,10 @@ def import_cmip6_slh_data(data_type = 'historical', use_models = 'bestmodels'):
     
     # Only use models as defined
     if use_models == 'bestmodels':
-        # Import best models
-        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
-        models = []
-
-        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
-        # open file and read the content in a list
-        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
-            for line in filehandle:
-                # remove linebreak which is the last character of the string
-                currentPlace = line[:-1]
-
-                # add item to the list
-                models.append(currentPlace)
+        models = best_models
     
-        zos = zos.where(zos.model.isin(models), drop=True)
-        zos_hist = zos_hist.where(zos_hist.model.isin(models), drop=True)
+    zos = zos.where(zos.model.isin(models), drop=True)
+    zos_hist = zos_hist.where(zos_hist.model.isin(models), drop=True)
     
     
     # For the cmip6 data the nodal and ibe shouldn't be removed
@@ -252,9 +246,12 @@ def import_cmip6_slh_data(data_type = 'historical', use_models = 'bestmodels'):
     zos_hist = zos_hist.zos.sel(station='Average', drop = True).to_pandas().T
     
     # Create one dataframe
-    zos = pd.concat([zos_hist, zos]).dropna(axis=1)
+    zos = pd.concat([zos_hist, zos])#.dropna(axis=1)
     
     return zos
+
+
+
 
 
 def import_cmip6_wind_contribution_data(wind_model = 'NearestPoint', data_type = 'historical'):
@@ -374,20 +371,7 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'ssp119', use_mod
     
     # Only use models as defined
     if use_models == 'bestmodels':
-        # Import best models
-        path_best_models = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Comparison results/'
-        models = []
-
-        # Source: https://stackabuse.com/reading-and-writing-lists-to-a-file-in-python/
-        # open file and read the content in a list
-        with open(path_best_models+'bestmodels.txt', 'r') as filehandle:
-            for line in filehandle:
-                # remove linebreak which is the last character of the string
-                currentPlace = line[:-1]
-
-                # add item to the list
-                models.append(currentPlace)
-                
+        models = best_models
                 
     data = data.where(data.model.isin(models), drop=True)
     

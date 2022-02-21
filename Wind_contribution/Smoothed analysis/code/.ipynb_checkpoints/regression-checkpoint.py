@@ -639,13 +639,13 @@ def regression_cmip6(wind_data, zos, wind_model = 'NearestPoint', data_type = 'h
     signif_dataset = xr.concat(signif_ds_lst, dim=wind_data.model.values).rename({"concat_dim":"model"})
         
     # Save the datasets
-    save_nc_data(results_dataset, 'cmip6', 'Regression results', f'results_{wind_model}_{data_type}')
-    save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', f'timeseries_{wind_model}_{data_type}')
-    save_nc_data(signif_dataset, 'cmip6', 'Regression results', f'significance_{wind_model}_{data_type}')    
+    save_nc_data(results_dataset, 'cmip6', 'Regression results', f'results_{wind_model}_{data_type}_smoothed')
+    save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', f'timeseries_{wind_model}_{data_type}_smoothed')
+    save_nc_data(signif_dataset, 'cmip6', 'Regression results', f'significance_{wind_model}_{data_type}_smoothed')    
         
     
     # Save the scalers
-    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/scalers_{wind_model}.pkl', 'wb')
+    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/scalers_{wind_model}_smoothed.pkl', 'wb')
     pickle.dump(scalers, file)
     file.close()
         

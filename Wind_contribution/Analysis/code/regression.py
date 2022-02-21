@@ -58,7 +58,7 @@ def timmerman_region_names():
     return ['Channel', 'South', 'Mid-West', 'Mid-East', 'North-West', 'North-East']
 
 
-def save_nc_data(data, folder, variable, name): 
+def save_nc_data(data, folder, variable, period, name): 
     """
     Function to save data as NETCDF4 file
     
@@ -66,10 +66,10 @@ def save_nc_data(data, folder, variable, name):
     for variable choose ['Wind', 'SLH', 'Pressure', 'SST', 'Regression results']
     
     """
-    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc", mode='w')
+    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{period}/{name}.nc", mode='w')
 
     
-def save_csv_data(data, folder, variable, name): 
+def save_csv_data(data, folder, variable, period, name): 
     """
     Function to save data as .csv file
     
@@ -77,7 +77,7 @@ def save_csv_data(data, folder, variable, name):
     for variable choose ['Wind', 'SLH', 'Pressure', 'SST', 'Regression results']
     
     """
-    data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.csv")
+    data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{period}/{name}.csv")
 
     
     
@@ -101,7 +101,7 @@ REGRESSION FUNCTION
 """
 
 
-def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 'era5'):
+def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 'era5', period = 'fullperiod'):
     """
     Function to perform the regression between the tide gauge data and observed wind data 
     
@@ -129,10 +129,21 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
     R2_u2_lst = []
     R2_v2_lst = []
     
+    
     # Create dataframe for significance
     signif_df = pd.DataFrame(data=dict(reggression_contributor=regg_names+['total', 'wind total'])) # Create dataframe 
     signif_df = signif_df.set_index('reggression_contributor')
     
+    # Create dataframe for different calculation R2
+    if wind_model == 'Dangendorf':
+        R2_df = pd.DataFrame({'station':stations, 'R$^2$':'', 'R$^2_{wind}$':'', 'R$^2_{neg}$':'', 'R$^2_{pos}$':'', 'R$^2_{tr}$':'', 
+                              'R$^2_{adj}$':'', 'R$^2_{adj, wind}$':'', 'R$^2_{adj, neg}$':'', 'R$^2_{adj, pos}$':'', 'R$^2_{adj, tr}$':''})
+        R2_df = R2_df.set_index('station')
+        
+    else:
+        R2_df = pd.DataFrame({'station':stations, 'R$^2$':'', 'R$^2_{wind}$':'', 'R$^2_{u^2}$':'', 'R$^2_{v^2}$':'', 'R$^2_{tr}$':'', 
+                              'R$^2_{adj}$':'', 'R$^2_{adj, wind}$':'', 'R$^2_{adj, u^2}$':'', 'R$^2_{adj, v^2}$':'', 'R$^2_{adj, tr}$':''})
+        R2_df = R2_df.set_index('station')
     
     # Perform regression for each station
     for idx, station in enumerate(stations):
@@ -231,6 +242,41 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
         timeseries_lst.append(df)
         
         
+        # Define p (number of regressors) for NearestPoint and Dangendorf
+        p=3
+        if wind_model == 'Timmerman':
+            p = 0
+            for i in coef_lst[-1]:
+                if not i == 0:
+                    p += 1
+        
+        # Calculate R2
+        R2_df['R$^2$'][station], R2_df['R$^2_{adj}$'][station] = R2_total_adjusted(df['total'][df.index.isin(y.index)].values, 
+                                                                                   y.values, p)
+        R2_df['R$^2_{wind}$'][station], R2_df['R$^2_{adj, wind}$'][station] = R2_total_adjusted(df['wind total'][df.index.isin(y.index)].values, 
+                                                                                                y.values, p)
+        R2_df['R$^2_{tr}$'][station], R2_df['R$^2_{adj, tr}$'][station] = R2_total_adjusted(df['trend'][df.index.isin(y.index)].values, 
+                                                                                            y.values, p)
+        
+        if wind_model == 'NearestPoint':
+            R2_df['R$^2_{u^2}$'][station], R2_df['R$^2_{adj, u^2}$'][station] = R2_total_adjusted(df['u$^2$'][df.index.isin(y.index)].values, 
+                                                                                                  y.values, p)
+            R2_df['R$^2_{v^2}$'][station], R2_df['R$^2_{adj, v^2}$'][station] = R2_total_adjusted(df['v$^2$'][df.index.isin(y.index)].values, 
+                                                                                                  y.values, p)
+        
+        elif wind_model == 'Timmerman':
+            R2_df['R$^2_{u^2}$'][station], R2_df['R$^2_{adj, u^2}$'][station] = R2_total_adjusted(df['u$^2$ total'][df.index.isin(y.index)].values, 
+                                                                                                  y.values, p)
+            R2_df['R$^2_{v^2}$'][station], R2_df['R$^2_{adj, v^2}$'][station] = R2_total_adjusted(df['v$^2$ total'][df.index.isin(y.index)].values, 
+                                                                                                  y.values, p)
+        
+        elif wind_model == 'Dangendorf':
+            R2_df['R$^2_{neg}$'][station], R2_df['R$^2_{adj, neg}$'][station] = R2_total_adjusted(df['Negative corr region'][df.index.isin(y.index)].values,
+                                                                                                  y.values, p)
+            R2_df['R$^2_{pos}$'][station], R2_df['R$^2_{adj, pos}$'][station] = R2_total_adjusted(df['Positive corr region'][df.index.isin(y.index)].values,
+                                                                                                  y.values, p)
+        
+        
         # Calculate R^2 values
         R2_total_lst.append(regression_.score(x, y.values.ravel())) # R^2 for the whole regression including the trend
         R2_wind_lst.append(R2_var(df, y, 'wind total', regression_))
@@ -243,7 +289,6 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
         elif wind_model == 'Dangendorf':
             R2_u2_lst.append(R2_var(df, y, 'Negative corr region', regression_))
             R2_v2_lst.append(R2_var(df, y, 'Positive corr region', regression_))
-        
         
         
         # Check significance for each regression contributor
@@ -302,14 +347,14 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
         results_df[regg_names[i]] = coef_lst_T[i]
         
     results_df = results_df.set_index('station')
-        
+    
         
     # Save the dataframes
-    save_csv_data(results_df, 'observations', 'Regression results', f'results_{wind_model}_{data_type}')
-    save_csv_data(timeseries_df, 'observations', 'Regression results', f'timeseries_{wind_model}_{data_type}')
+    save_csv_data(results_df, 'observations', 'Regression results', period, f'results_{wind_model}_{data_type}')
+    save_csv_data(timeseries_df, 'observations', 'Regression results', period, f'timeseries_{wind_model}_{data_type}')
         
     
-    return(results_df, timeseries_df, signif_df)
+    return(results_df, timeseries_df, signif_df, R2_df)
 
 
 
@@ -319,7 +364,21 @@ def regression_obs(wind_data, tg_data, wind_model = 'NearestPoint', data_type = 
 
 
 
-def regression_cmip6(wind_data, zos, wind_model = 'NearestPoint', data_type = 'historical'):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def regression_cmip6(wind_data, zos, wind_model = 'NearestPoint', data_type = 'historical', period = 'fullperiod'):
     """
     Function to perform the regression between the cmip6 sea level and wind data
     
@@ -639,13 +698,13 @@ def regression_cmip6(wind_data, zos, wind_model = 'NearestPoint', data_type = 'h
     signif_dataset = xr.concat(signif_ds_lst, dim=wind_data.model.values).rename({"concat_dim":"model"})
         
     # Save the datasets
-    save_nc_data(results_dataset, 'cmip6', 'Regression results', f'results_{wind_model}_{data_type}')
-    save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', f'timeseries_{wind_model}_{data_type}')
-    save_nc_data(signif_dataset, 'cmip6', 'Regression results', f'significance_{wind_model}_{data_type}')    
+    save_nc_data(results_dataset, 'cmip6', 'Regression results', period, f'results_{wind_model}_{data_type}')
+    save_nc_data(timeseries_dataset, 'cmip6', 'Regression results', period, f'timeseries_{wind_model}_{data_type}')
+    save_nc_data(signif_dataset, 'cmip6', 'Regression results', period, f'significance_{wind_model}_{data_type}')    
         
     
     # Save the scalers
-    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/scalers_{wind_model}.pkl', 'wb')
+    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/{period}/scalers_{wind_model}.pkl', 'wb')
     pickle.dump(scalers, file)
     file.close()
         
@@ -704,4 +763,25 @@ def R2_var(df, y, var, regression_):
     score = regression_.score(x_wind,y)
     
     return score
+
+
+
+def R2_total_adjusted(x, y, p):
+    ''''
+    Function to calculate R2 between two timeseries and the adjusted R2
     
+    The adjusted R2 is calculated using R2
+    N is the number of points in the data sample
+    p is the number of regressors, the amount of variables excluding the constant
+    p is 3 for the NearestPoint and Dangendorf regression model but depends for the
+    Timmerman regression model of the result of the LASSO regression
+    
+    x and y should be 1D arrays or lists
+    '''
+    N = len(x)
+    
+    r2 = (np.corrcoef(x, y)[0,1])**2
+    
+    r2_adjusted = 1 - (((1-r2)*(N-1))/(N-p-1))
+    
+    return r2, r2_adjusted
