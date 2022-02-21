@@ -85,6 +85,9 @@ def plot_tg_data_raw(data, title = True):
     plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/fullperiod/observations/tide_gauge_raw.png', bbox_inches = 'tight', dpi = 500)
 
 
+    
+    
+    
 
 
 def plot_obs_tg_wc_one_station(tg_data, ts_lst, labels, station = 'Average', show_tg = True, smoothed = False):
@@ -129,7 +132,9 @@ def plot_obs_tg_wc_one_station(tg_data, ts_lst, labels, station = 'Average', sho
             plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/tg_wc_{station}')
     
     
-    
+   
+
+
     
 def plot_obs_tg_wc_all_stations(tg_data, ts_lst, labels, show_tg = True, smoothed = False):
     
@@ -227,9 +232,12 @@ def plot_obs_tg_wc_all_stations(tg_data, ts_lst, labels, show_tg = True, smoothe
             plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/tg_wc_allstations_smoothed')
         else:
             plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/comparison/tg_wc_allstations')
+
     
-    
-    
+
+
+
+
 def plot_obs_running_trend_acceleration(data_lst, label_lst, period_length = 40, station = 'Average'):
     df_lst_trend = []
     df_lst_acc = []

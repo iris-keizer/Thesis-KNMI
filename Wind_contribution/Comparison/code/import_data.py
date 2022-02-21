@@ -41,6 +41,9 @@ def station_names():
 
 
 
+
+
+
 def station_coords(): 
     """
     Function to obtain the coordinates of the tide gauge stations as a dataframe
@@ -62,6 +65,9 @@ def station_coords():
     df = df.drop(['coastline_code', 'station_code', 'quality'], axis=1)
     
     return df
+
+
+
 
 
 def nodal_tides_potential(lat, time_years):
@@ -95,6 +101,9 @@ OBSERVATIONS
 ------------
 
 """
+
+
+
 
 def import_obs_slh_data():
     """
@@ -140,6 +149,9 @@ def import_obs_slh_data():
 
 
 
+
+
+
 def import_obs_slh_data_raw():
     """
     Function that imports the tide gauge sea level height data as a pandas.dataframe
@@ -163,6 +175,9 @@ def import_obs_slh_data_raw():
     
     
     return tg_data_df
+
+
+
 
 
 

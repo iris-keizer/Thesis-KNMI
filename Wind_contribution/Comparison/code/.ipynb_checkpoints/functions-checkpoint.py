@@ -255,6 +255,8 @@ def cmip6_sine_fit(data, wavelength):
     
     return pd.concat(results_lst, axis=1, keys = data.model.values), df_performance
 
+
+
 def obtain_cmip6_sine_fits(data_lst, label_lst, wavelength):
     
     df_res_lst = []
