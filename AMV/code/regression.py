@@ -78,7 +78,7 @@ def regression(data_x, data_y, lag):
 
 def lagged_regression(data_x, data_y):
     
-    lags = np.arange(0, 21)
+    lags = np.arange(-20, 21)
     
     ts_lst1 = []
     r_lst1 = []
@@ -105,11 +105,11 @@ def lagged_regression(data_x, data_y):
             ts_lst0.append(df_timeseries)
             r_lst0.append(df_results)
         
-        ts_lst1.append(pd.concat(ts_lst0, axis=1, keys=wind_labels))
-        r_lst1.append(pd.concat(r_lst0, axis=1, keys=wind_labels))
+        ts_lst1.append(pd.concat(ts_lst0, axis=1, keys=data_y.columns))
+        r_lst1.append(pd.concat(r_lst0, axis=1, keys=data_y.columns))
         
-    timeseries = pd.concat(ts_lst1, axis=1, keys=AMV_names)
-    results = pd.concat(r_lst1, axis=1, keys=AMV_names)
+    timeseries = pd.concat(ts_lst1, axis=1, keys=data_x.columns)
+    results = pd.concat(r_lst1, axis=1, keys=data_x.columns)
 
     return results, timeseries
 
@@ -153,3 +153,4 @@ def lagged_regression_cmip6(data_x, data_y):
     results = pd.concat(r_lst1, axis=1, keys=data_x.columns)
 
     return results, timeseries
+

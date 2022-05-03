@@ -80,7 +80,7 @@ def save_nc_data(data, folder, variable, period, name):
     for variable choose ['Wind', 'SLH', 'Pressure', 'SST', 'Regression results']
     
     """
-    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{period}/{name}.nc", mode='w')
+    data.to_netcdf(f"/Users/iriskeizer/Documents/Wind effect/Data/cmip6/Regression results/{name}.nc", mode='w')
 
 
 
@@ -95,7 +95,7 @@ def save_csv_data(data, folder, variable, period, name):
     for variable choose ['Wind', 'SLH', 'Pressure', 'SST', 'Regression results']
     
     """
-    data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{period}/{name}.csv")
+    data.to_csv(f"/Users/iriskeizer/Documents/Wind effect/Data/cmip6/Regression results/{name}.csv")
 
     
 
@@ -727,7 +727,7 @@ def regression_cmip6(wind_data, zos, wind_model = 'NearestPoint', data_type = 'h
         
     
     # Save the scalers
-    file = open(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/Regression results/{period}/scalers_{wind_model}.pkl', 'wb')
+    file = open(f'/Users/iriskeizer/Documents/Wind effect/Data/cmip6/Regression results/scalers_{wind_model}.pkl', 'wb')
     pickle.dump(scalers, file)
     file.close()
         

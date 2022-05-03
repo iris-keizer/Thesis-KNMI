@@ -22,6 +22,8 @@ from scipy.signal import detrend
 
 AMV_names = ['HadISSTv2', 'ERSSTv5', 'COBE-SST2']
 
+
+
 """
 Practical functions
 -------------------
@@ -68,7 +70,7 @@ def import_obs_ac_slh_data(smoothed = False, window = 21):
     
     '''
     
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Regression results/fullperiod/'
+    path = '/Users/iriskeizer/Documents/Wind effect/Data/observations/Regression results/fullperiod/'
     
     
     for wl in wind_labels:
@@ -109,7 +111,7 @@ def import_obs_AMV_data(smoothed = False, window = 21):
     '''
     
     
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/AMV/Data/AMV/'
+    path = '/Users/iriskeizer/Documents/Wind effect/Data/observations/AMV/'
     
     # Deseasonalized and detrended
     AMV_ds_dt_had = xr.open_dataset(path + 'AMO_ds_dt_raw_had.nc') 

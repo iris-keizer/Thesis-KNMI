@@ -148,7 +148,7 @@ def station_coords():
     
     
     # Necessary declarations to obtain tide gauge station coordinates
-    path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual/filelist.txt'
+    path_locations = '/Users/iriskeizer/Documents/Wind effect/Data/rlr_annual/filelist.txt'
     loc_num = [20, 22, 23, 24, 25, 32]
     col_names = ['id', 'lat', 'lon', 'station', 'coastline_code', 'station_code', 'quality']
     
@@ -161,6 +161,8 @@ def station_coords():
     df = df.drop(['coastline_code', 'station_code', 'quality'], axis=1)
     
     return df
+
+
 
 
 def cmip6_np_coords(): 
@@ -284,7 +286,7 @@ def plot_tg_data(data, title = True, period = 'fullperiod'):
     plt.yticks(fontsize = fsize)
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/tide_gauge.png', bbox_inches = 'tight', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/tide_gauge.png', bbox_inches = 'tight', dpi = 500)
 
 
     
@@ -318,7 +320,7 @@ def plot_obs_wind_data(data, model, data_type, title = True, period = 'fullperio
     plt.xlim(1830, 2026)
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/u2_all_stations.png', bbox_inches = 'tight', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/observations/{model}/{data_type}/u2_all_stations.png', bbox_inches = 'tight', dpi = 500)
     
     
     fig = plt.figure(figsize=(9,3))
@@ -342,7 +344,7 @@ def plot_obs_wind_data(data, model, data_type, title = True, period = 'fullperio
     plt.xlim(1830, 2026)
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/observations/{model}/{data_type}/v2_all_stations.png', bbox_inches = 'tight', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/observations/{model}/{data_type}/v2_all_stations.png', bbox_inches = 'tight', dpi = 500)
     
     
     
@@ -664,7 +666,7 @@ def plot_np_locations(title = True, period = 'fullperiod'):
     ax = plt.axes(projection=ccrs.PlateCarree())
     if title == True:
         plt.title('Data locations along the Dutch coast')
-    ax.set_extent([3.2, 7.2, 50.6, 54.1], ccrs.PlateCarree())
+    ax.set_extent([3.2, 7.2, 50.8, 54.1], ccrs.PlateCarree())
     ax.coastlines(resolution='10m')
     
     gl = ax.gridlines(draw_labels = True, linestyle='--')
@@ -701,18 +703,157 @@ def plot_np_locations(title = True, period = 'fullperiod'):
     plt.legend(labels = ['Tide gauge sea level data', 'ERA5 reanalysis wind data', 
                          '20CRv3 reanalysis wind data', 'CMIP6 data'], loc='upper left', fontsize = 12.5)
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/np_data_locations.png', bbox_inches='tight', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/np_data_locations.png', bbox_inches='tight', dpi = 500)
+
+
+def plot_np_locations2(title = True, period = 'fullperiod'):
+    '''
+    Function that plots a map of the Dutch coast indicating the locations of the tide gauge stations, reanalysis and cmip6 data
+    '''
+    fsize = 13
+    
+    tg_coords = station_coords()
+    era5_coords = obs_np_coords('era5')
+    cr_coords = obs_np_coords('20cr')
+    cmip6_coords = cmip6_np_coords()
+    
+    
+    fig = plt.figure(figsize=(8,8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    if title == True:
+        plt.title('Data locations along the Dutch coast')
+    ax.set_extent([3.0, 7.2, 50.8, 54.2], ccrs.PlateCarree())
+    ax.coastlines(resolution='10m')
+    
+    gl = ax.gridlines(draw_labels = True, linestyle='--', alpha=0)
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.xlabel_style = {'size': 13.5}
+    gl.ylabel_style = {'size': 13.5}
+    ax.add_feature(cf.OCEAN)
+    ax.add_feature(cf.LAND)
+    ax.add_feature(cf.LAKES)
+    ax.add_feature(cf.BORDERS)
+    
+    for i, station in enumerate(tg_coords.index):
+        lat = tg_coords['lat'][station]
+        lon = tg_coords['lon'][station]
+        plt.scatter(lon, lat, s=80, marker='o', color='tab:red', edgecolor = 'k',
+                    label = f'{station} ({round(lat,1)}, {round(lon,1)})')
+        plt.scatter(era5_coords['lon'][station], era5_coords['lat'][station], s=100, marker='x', color='k')
+        plt.scatter(cr_coords['lon'][station], cr_coords['lat'][station], s=100, marker='o', facecolors='none', edgecolors='k')
+        #plt.scatter(cmip6_coords['lon'][station], cmip6_coords['lat'][station], s=100, marker='o', facecolors='none', edgecolors='k')
+
+
+    # Add station names
+    plt.text(tg_coords['lon']['Vlissingen']-0.3, tg_coords['lat']['Vlissingen']-0.35, 'Vlissingen', fontsize = fsize)
+    plt.text(tg_coords['lon']['Hoek v. Holland']+0.08, tg_coords['lat']['Hoek v. Holland']-0.06, 'Hoek v. Holland', fontsize = fsize)
+    plt.text(tg_coords['lon']['Den Helder']-0.02, tg_coords['lat']['Den Helder']-0.15, 'Den Helder', fontsize = fsize)
+    plt.text(tg_coords['lon']['Delfzijl']-0.5, tg_coords['lat']['Delfzijl']-0.04, 'Delfzijl', fontsize = fsize)
+    plt.text(tg_coords['lon']['Harlingen']+0.09, tg_coords['lat']['Harlingen']-0.04, 'Harlingen', fontsize = fsize)
+    plt.text(tg_coords['lon']['IJmuiden']+0.05, tg_coords['lat']['IJmuiden']-0.05, 'IJmuiden', fontsize = fsize)
+    
+    
+    # Add axes labels
+    plt.text(4.5, 50.5, 'Longitude [°]', fontsize = 15)
+    plt.text(2.31, 52.2, 'Latitude [°]', fontsize = 15, rotation='vertical')
+    
+    
+    plt.legend(labels = ['Tide gauge sea level data', 'ERA5 wind data', 
+                         '20CRv3 wind data'], loc='upper left', fontsize = 15, fancybox=True, frameon = False)
+
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/np_data_locations2.png', bbox_inches='tight', dpi = 500)
 
 
     
     
     
+def plot_np_locations3(title = True, period = 'fullperiod'):
+    '''
+    Function that plots a map of the Dutch coast indicating the locations of the tide gauge stations, reanalysis and cmip6 data
+    '''
+    fsize = 13
+    
+    tg_coords = station_coords()
+    era5_coords = obs_np_coords('era5')
+    cr_coords = obs_np_coords('20cr')
+    cmip6_coords = cmip6_np_coords()
+    
+    
+    fig = plt.figure(figsize=(8,8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    if title == True:
+        plt.title('Data locations along the Dutch coast')
+    ax.set_extent([3.0, 7.2, 50.8, 54.3], ccrs.PlateCarree())
+    ax.coastlines(resolution='10m')
+    
+    gl = ax.gridlines(draw_labels = True, linestyle='--', alpha=0)
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.xlabel_style = {'size': 13.5}
+    gl.ylabel_style = {'size': 13.5}
+    ax.add_feature(cf.OCEAN)
+    ax.add_feature(cf.LAND)
+    ax.add_feature(cf.LAKES)
+    #ax.add_feature(cf.BORDERS)
+    
+    for i, station in enumerate(tg_coords.index):
+        lat = tg_coords['lat'][station]
+        lon = tg_coords['lon'][station]
+        plt.scatter(lon, lat, s=80, marker='o', color='tab:red', edgecolor = 'k',
+                    label = f'{station} ({round(lat,1)}, {round(lon,1)})')
+        plt.scatter(era5_coords['lon'][station], era5_coords['lat'][station], s=100, marker='x', color='k')
+        plt.scatter(cr_coords['lon'][station], cr_coords['lat'][station], s=100, marker='o', facecolors='none', edgecolors='navy')
+        #plt.scatter(cmip6_coords['lon'][station], cmip6_coords['lat'][station], s=100, marker='o', facecolors='none', edgecolors='navy')
+
+
+    # Add station names
+    plt.text(5.8, 51.0, '1.   Vlissingen \n2.   Hoek v. Holland \n3.   IJmuiden \n4.   Den Helder \n5.   Harlingen \n6.   Delfzijl', fontsize = 14)
+    
+    # Add numbers to tide gauge stations
+    plt.text(tg_coords['lon']['Vlissingen']-0.04, tg_coords['lat']['Vlissingen']-0.22, '1', fontsize = 15)
+    plt.text(tg_coords['lon']['Hoek v. Holland']+0.08, tg_coords['lat']['Hoek v. Holland']-0.06, '2', fontsize = 15)
+    plt.text(tg_coords['lon']['Den Helder']+0.02, tg_coords['lat']['Den Helder']-0.18, '4', fontsize = 15)
+    plt.text(tg_coords['lon']['Delfzijl']-0.15, tg_coords['lat']['Delfzijl']-0.06, '6', fontsize = 15)
+    plt.text(tg_coords['lon']['Harlingen']+0.08, tg_coords['lat']['Harlingen']-0.06, '5', fontsize = 15)
+    plt.text(tg_coords['lon']['IJmuiden']+0.08, tg_coords['lat']['IJmuiden']-0.06, '3', fontsize = 15)
+    
+    # Add numbers to ERA5 data
+    #plt.text(era5_coords['lon']['Vlissingen']-0.04, era5_coords['lat']['Vlissingen']+0.08, '1', fontsize = 15)
+    #plt.text(era5_coords['lon']['Hoek v. Holland']-0.04, era5_coords['lat']['Hoek v. Holland']+0.08, '2', fontsize = 15)
+    #plt.text(era5_coords['lon']['Den Helder']-0.04, era5_coords['lat']['Den Helder']+0.08, '4', fontsize = 15)
+    #plt.text(era5_coords['lon']['Delfzijl']-0.04, era5_coords['lat']['Delfzijl']+0.08, '6', fontsize = 15)
+    #plt.text(era5_coords['lon']['Harlingen']-0.04, era5_coords['lat']['Harlingen']+0.08, '5', fontsize = 15)
+    #plt.text(era5_coords['lon']['IJmuiden']-0.04, era5_coords['lat']['IJmuiden']+0.08, '3', fontsize = 15)
+    
+    # Add numbers to 20CRv3 data
+    plt.text(cr_coords['lon']['Vlissingen']-0.12, cr_coords['lat']['Vlissingen']+0.08, '1,2,3', fontsize = 15, color='navy')
+    plt.text(cr_coords['lon']['Den Helder']-0.06, cr_coords['lat']['Den Helder']+0.08, '4,5', fontsize = 15, color='navy')
+    plt.text(cr_coords['lon']['Delfzijl']-0.04, cr_coords['lat']['Delfzijl']+0.08, '6', fontsize = 15, color='navy')
+    
+    # Add numbers to CMIP6 data
+    #plt.text(cmip6_coords['lon']['Vlissingen']-0.04, cmip6_coords['lat']['Vlissingen']+0.08, '1', fontsize = 15, color='navy')
+    #plt.text(cmip6_coords['lon']['Hoek v. Holland']-0.09, cmip6_coords['lat']['Hoek v. Holland']+0.08, '2,3,4', fontsize = 15, color='navy')
+    #plt.text(cmip6_coords['lon']['Harlingen']-0.04, cmip6_coords['lat']['Harlingen']+0.08, '5', fontsize = 15, color='navy')
+    #plt.text(cmip6_coords['lon']['Delfzijl']-0.04, cmip6_coords['lat']['Delfzijl']+0.08, '6', fontsize = 15, color='navy')
+    
+    
+    # Add axes labels
+    plt.text(4.5, 50.5, 'Longitude [°]', fontsize = 15)
+    plt.text(2.31, 52.2, 'Latitude [°]', fontsize = 15, rotation='vertical')
+    
+    
+    plt.legend(labels = ['Tide gauge sea level data', 'ERA5 wind data', 
+                         '20CRv3 wind data'], loc='upper left', fontsize = 14, fancybox=True, frameon = False)
+
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/np_data_locations3.png', bbox_inches='tight', dpi = 500)
+    
     
     
     
 
 
-def timmerman_regions_plot(title = True, period = 'fullperiod'):
+def timmerman_regions_plot(title = True):
     '''
     Function that plots a map of the North Sea indicating the locations of the Timmerman regions
     '''
@@ -743,7 +884,7 @@ def timmerman_regions_plot(title = True, period = 'fullperiod'):
     plt.xticks(fontsize = fsize)
     plt.yticks(fontsize = fsize)
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/tim_regions.png', bbox_inches='tight', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/observations/Timmerman/tim_regions.png', bbox_inches='tight', dpi = 500)
 
 
 
@@ -999,7 +1140,7 @@ def plot_zos_data_per_model(zos, data_type, station='Average', period = 'fullper
 
         
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{data_type}/zos_per_model.png', bbox_inches='tight')
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/zos_per_model.png', bbox_inches='tight')
 
     
     
@@ -1108,7 +1249,6 @@ def plot_cmip6_wind_data_per_model(data, wind_model, data_type, station = 'Avera
         
     
 
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_model}/wind_per_model_{data_type}.png', bbox_inches='tight')
 
 
     
@@ -1150,7 +1290,7 @@ def plot_cmip6_two_variables(data, var1, var2, data_type, period = 'fullperiod')
     
     xr.plot.scatter(data, var1, var2, hue='model', col='station', col_wrap=3, sharex = False, figsize=(10,8))
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{var1}_{var2}_per_station_{data_type}.png', bbox_inches='tight')
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/{var1}_{var2}_per_station_{data_type}.png', bbox_inches='tight')
     
     
     
@@ -1175,7 +1315,7 @@ def plot_cmip6_result_per_station(data, variable, data_type, period = 'fullperio
     plt.legend(bbox_to_anchor=(1.05, 1), ncol=2)
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{variable}_per_station_{data_type}.png', bbox_inches='tight')
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/{variable}_per_station_{data_type}.png', bbox_inches='tight')
     
     
     
@@ -1228,7 +1368,7 @@ def plot_cmip6_timeseries_per_station_one_model(zos, timeseries, model, var = ['
     
     labels = ['zos']+var
     fig.legend(labels=labels, loc=(0.57, 0.1))
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/timeseries_per_station_{model}.png', bbox_inches='tight')
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/timeseries_per_station_{model}.png', bbox_inches='tight')
     
 
     
@@ -1296,7 +1436,7 @@ def plot_cmip6_trends_timeseries_per_station_model_averages(zos, timeseries, var
     plt.title('Trend per station averaged over all models')
     plt.legend(bbox_to_anchor=(1, 1))
     plt.axhline(color='k', linestyle='--')
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_model}/timeseries_trends_per_station_{data_type}.png', bbox_inches='tight')
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/timeseries_trends_per_station_{data_type}.png', bbox_inches='tight')
     
     
     
@@ -1348,20 +1488,104 @@ def plot_zos_regression_result_per_model_one_station(zos, timeseries, labels, wi
             for label in labels:
                 ax.plot(timeseries.time.values, timeseries[label].sel(station = station, model = models[4*i+j]).values)
 
-            ax.set_xlabel('Time [yr]')
-            ax.set_ylabel('zos [cm]')
+            ax.set_xlabel('Time [yr]', fontsize = 14)
+            ax.set_ylabel('zos [cm]', fontsize = 14)
             ax.axhline(color='k', linestyle='--', linewidth = 1)
-            ax.set_title('model = ' + models[4*i+j])
+            ax.set_title('model = ' + models[4*i+j], fontsize = 14)
             ax.set_ylim(y_min,y_max)
             plt.tight_layout()
 
         
             if i == 0 and j == 0:
                 labels_leg = ['zos'] + labels
-                ax.legend(labels = labels_leg)
+                ax.legend(labels = labels_leg, loc = 'upper left', fontsize = 14)
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/Wind contribution/{period}/cmip6/{wind_reg_model}/zos_timeseries_one_model_{station}_showzos_smoothed', bbox_inches='tight')
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/zos_timeseries_one_model_{station}_showzos_smoothed', bbox_inches='tight')
+     
+
+
+
+def plot_zos_wind_effect_1993_2014(zos, timeseries, labels, wind_reg_model, station = 'Average', period = 'fullperiod'):
+    """
+    
+    
+    
+    """
+    models = timeseries.model.values
+    
+    y_min = -7
+    y_max = 15
+    
+    fig, axs = plt.subplots(7, 4, figsize=(24, 20))
+
+    zos = zos.where(zos.time >= 1993, drop = True)
+    timeseries = timeseries.where(zos.time >= 1993, drop = True)
+    
+    for i in range(7):
+
+        for j in range(4):
+            ax = axs[i,j]
+
+
+            ax.plot(zos.time.values, zos.zos.sel(station=station, model=models[4*i+j]), color = 'darkgray')
+
+            for label in labels:
+                ax.plot(timeseries.time.values, timeseries[label].sel(station = station, model = models[4*i+j]).values)
+
+            ax.set_xlabel('Time [yr]', fontsize = 14)
+            ax.set_ylabel('zos [cm]', fontsize = 14)
+            ax.axhline(color='k', linestyle='--', linewidth = 1)
+            ax.set_title('model = ' + models[4*i+j], fontsize = 14)
+            ax.set_ylim(y_min,y_max)
+            plt.tight_layout()
+
+        
+            if i == 0 and j == 0:
+                labels_leg = ['zos', 'wind influence']
+                ax.legend(labels = labels_leg, loc = 'upper left', fontsize = 14)
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/zos_wind_effect_average_1993_2014', bbox_inches='tight')
      
     
- 
 
+
+def plot_zos_without_wind_effect_1993_2014(zos, timeseries, station = 'Average', period = 'fullperiod'):
+    """
+    
+    
+    
+    """
+    models = timeseries.model.values
+    
+    y_min = -7
+    y_max = 12
+    
+    fig, axs = plt.subplots(7, 4, figsize=(24, 20))
+
+    zos = zos.where(zos.time >= 1993, drop = True)
+    timeseries = timeseries.where(zos.time >= 1993, drop = True)
+    
+    for i in range(7):
+
+        for j in range(4):
+            ax = axs[i,j]
+
+
+            ax.plot(zos.time.values, zos.zos.sel(station=station, model=models[4*i+j]), color = 'darkgray')
+            ax.plot(timeseries.time.values, timeseries.zos.sel(station = station, model = models[4*i+j]).values)
+
+            ax.set_xlabel('Time [yr]', fontsize = 14)
+            ax.set_ylabel('zos [cm]', fontsize = 14)
+            ax.axhline(color='k', linestyle='--', linewidth = 1)
+            ax.set_title('model = ' + models[4*i+j], fontsize = 14)
+            ax.set_ylim(y_min,y_max)
+            plt.tight_layout()
+
+        
+            if i == 0 and j == 0:
+                labels_leg = ['zos', 'zos without wind']
+                ax.legend(labels = labels_leg, loc = 'upper left', fontsize = 14)
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/Wind contribution/CMIP6/NearestPoint/zos_without_wind_effect_average_1993_2014', bbox_inches='tight')
+     
+  

@@ -73,7 +73,7 @@ def save_nc_data(data, folder, variable, name):
     
     """
     
-    data.to_netcdf(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.nc", mode='w')
+    data.to_netcdf(f"/Users/iriskeizer/Documents/Wind effect/Data/{folder}/{variable}/{name}.nc", mode='w')
     
     
 def save_csv_data(data, folder, variable, name): 
@@ -191,8 +191,8 @@ def prep_wind_data_obs(data_type = 'era5'):
         
         
         # Define the paths to code which comes from two different dataproducts
-        path_fp = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Wind/wind_era5_fp.nc' #1950 - 1978
-        path_sp = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Wind/wind_era5_sp.nc' #1979 - present
+        path_fp = '/Users/iriskeizer/Documents/Wind effect/Data/observations/Wind/wind_era5_fp.nc' #1950 - 1978
+        path_sp = '/Users/iriskeizer/Documents/Wind effect/Data/observations/Wind/wind_era5_sp.nc' #1979 - present
 
 
         # Open data file
@@ -222,8 +222,8 @@ def prep_wind_data_obs(data_type = 'era5'):
         
         
         # Define the path to code
-        path_u = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Wind/wind_20cr_u.nc' # Path to zonal wind
-        path_v = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Wind/wind_20cr_v.nc' # Path to meridional wind
+        path_u = '/Users/iriskeizer/Documents/Wind effect/Data/observations/Wind/wind_20cr_u.nc' # Path to zonal wind
+        path_v = '/Users/iriskeizer/Documents/Wind effect/Data/observations/Wind/wind_20cr_v.nc' # Path to meridional wind
 
 
         # Open data file
@@ -261,9 +261,9 @@ def prep_wind_data_obs(data_type = 'era5'):
     dataset = dataset.where((dataset.lat > 40) & (dataset.lat < 90) & (dataset.lon > -40) & (dataset.lon < 30), drop=True)
 
 
-    # Obtain stress for monthly averaged data (wind is squared, sign is retained)
-    dataset = dataset.assign(u2 = dataset.u**2*np.sign(dataset.u))
-    dataset = dataset.assign(v2 = dataset.v**2*np.sign(dataset.v))  
+    # Obtain stress for monthly averaged data 
+    dataset = dataset.assign(u2 = dataset.u*(np.sqrt(dataset.u**2+dataset.v**2)))
+    dataset = dataset.assign(v2 = dataset.v*(np.sqrt(dataset.u**2+dataset.v**2)))  
 
 
     # Calculate annual averages 

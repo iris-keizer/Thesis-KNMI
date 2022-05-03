@@ -70,7 +70,7 @@ def station_coords():
     
     
     # Necessary declarations to obtain tide gauge station coordinates
-    path_locations = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/ERA5/Data/rlr_annual/filelist.txt'
+    path_locations = '/Users/iriskeizer/Documents/Wind effect/Data/rlr_annual/filelist.txt'
     loc_num = [20, 22, 23, 24, 25, 32]
     col_names = ['id', 'lat', 'lon', 'station', 'coastline_code', 'station_code', 'quality']
     
@@ -151,7 +151,7 @@ def save_csv_data(data, folder, variable, name):
     For folder choose ['observations', 'cmip6'], for variable choose ['Wind', 'SLH', 'Pressure', 'SST']
     
     """
-    data.to_csv(f"/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/{folder}/{variable}/{name}.csv")
+    data.to_csv(f"/Users/iriskeizer/Documents/Wind effect/Data/{folder}/{variable}/{name}.csv")
 
 
     
@@ -391,7 +391,7 @@ def import_obs_slh_data(data_type = 'era5'):
     
     
     # Define paths to data
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/SLH/tg_data.csv'
+    path = '/Users/iriskeizer/Documents/Wind effect/Data/observations/SLH/tg_data.csv'
     
     
     # Open data file
@@ -408,7 +408,7 @@ def import_obs_slh_data(data_type = 'era5'):
     
     
     # Import pressure data
-    path_pres = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/Pressure/'
+    path_pres = '/Users/iriskeizer/Documents/Wind effect/Data/observations/Pressure/'
     pres = xr.open_dataset(path_pres+f'pres_annual_{data_type}.nc')
     
     # Make sure tg data has same temporal length as pressure
@@ -466,7 +466,7 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
     """
     
     
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/'
+    path = '/Users/iriskeizer/Documents/Wind effect/Data/observations/'
     
     
     
@@ -519,7 +519,7 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
         data_u['Average'] = data_u.mean(axis=1)
         data_v['Average'] = data_v.mean(axis=1)
 
-        annual_df = pd.concat([data_u, data_v], keys=['u$^2$','v$^2$'],  axis=1)
+        annual_df = pd.concat([data_u, data_v], keys=['$u \sqrt{u^2+v^2}$','$v \sqrt{u^2+v^2}$'],  axis=1)
         annual_df = annual_df.swaplevel(0,1, axis=1)
             
     elif model == 'Timmerman':
@@ -538,7 +538,7 @@ def import_obs_wind_data(model = 'Nearest Point', data_type = 'era5'):
 
         for ds in regional_data:
             ds_avg = ds.mean('lon').mean('lat')
-            lst.append(pd.DataFrame(data={'time': ds_avg.year, 'u$^2$' : ds_avg.u2, 'v$^2$' : ds_avg.v2}))
+            lst.append(pd.DataFrame(data={'time': ds_avg.year, '$u \sqrt{u^2+v^2}$' : ds_avg.u2, '$v \sqrt{u^2+v^2}$' : ds_avg.v2}))
             lst[-1] = lst[-1].set_index('time')
 
         annual_df = pd.concat(lst, axis=1, keys = regions.names)
@@ -573,7 +573,7 @@ def import_pres_tg_corr_data(data_type = 'era5', year_start = 1950, year_final =
     # Prepare pressure data
 
     # Import annual pressure data
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/observations/'
+    path = '/Users/iriskeizer/Documents/Wind effect/Data/observations/'
     pres = xr.open_dataset(path + f'Pressure/pres_annual_{data_type}.nc') 
 
     # Linearly detrend
@@ -643,7 +643,7 @@ def import_cmip6_slh_data(data_type = 'historical'):
     
     
     # Define paths to data\
-    path = f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/SLH/slh_annual_historical.nc'
+    path = f'/Users/iriskeizer/Documents/Wind effect/Data/cmip6/SLH/slh_annual_historical.nc'
 
     # Open data file
     zos = xr.open_dataset(path) 
@@ -734,7 +734,7 @@ def import_cmip6_wind_data(model = 'NearestPoint', data_type = 'historical'):
     """
     
     
-    path = '/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Data/cmip6/'
+    path = '/Users/iriskeizer/Documents/Wind effect/Data/cmip6/'
     
     
     

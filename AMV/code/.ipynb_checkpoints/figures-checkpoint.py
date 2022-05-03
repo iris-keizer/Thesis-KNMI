@@ -57,7 +57,7 @@ def plot_df_timeseries(data_df, ylabel = 'No label given', title = 'No title giv
     plt.axhline(color='grey', linestyle='--')  
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_{title}_{window}', 
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_{title}_{window}', 
                 bbox_inches = 'tight', dpi = 500)
 
     
@@ -114,7 +114,7 @@ def plot_ac_cmip6_timeseries(data_df, ylabel = 'No label given', window = 21, ym
         
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_ac_{window}', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_cmip6_ac_{window}', dpi = 500)
 
     
 def plot_amv_cmip6_timeseries(data_df, ylabel = 'No label given', window = 21, ymin = -6, ymax = 12):
@@ -164,7 +164,7 @@ def plot_amv_cmip6_timeseries(data_df, ylabel = 'No label given', window = 21, y
         
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_amv_{window}', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_cmip6_amv_{window}', dpi = 500)
     
     
     
@@ -199,7 +199,7 @@ def plot_era5_20cr_timeseries(data_era5, data_20cr, window = 21):
     plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_era5&20cr_{window}', 
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_era5&20cr_{window}', 
                 bbox_inches = 'tight', dpi = 500)
     
     
@@ -255,11 +255,54 @@ def plot_result(results_era5, results_20cr, var, ylabel, ymin = -0.01, ymax = 0.
     if var == 'r$^2$':
         var = 'r2'
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/results_{var}_{window}', dpi = 500)
- 
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results_{var}_{window}', dpi = 500)
 
 
 
+def plot_result_2(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
+    '''
+    Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
+    
+    '''
+    labels_wind = ['NearestPointAverage', 'PressureDifference']
+    labels_AMV = ['HadISSTv2', 'ERSSTv5', 'COBE-SST2']
+    
+    fsize = 15
+    
+    fig, axs = plt.subplots(2, 1, figsize = (9,7))
+    
+    for i, l in enumerate(labels_wind):
+        
+        ax = axs[i]
+        
+        data = results.swaplevel(0,1, axis=1)[l]
+        
+        for k in labels_AMV:
+            dataT = data[k].T
+            ax.scatter(dataT.index, dataT[var].values)
+        
+        if i == 1:
+            ax.set_xlabel('Lag [yr]', fontsize=fsize)
+        
+        ax.set_ylabel(ylabel, fontsize=fsize)
+        
+        ax.set_title(labels_wind[i], fontsize=fsize)
+        ax.set_ylim(ymin, ymax)
+        
+        if i == 0:
+            ax.legend(labels = labels_AMV, loc = location, fontsize = 14)   
+        
+        ax.axhline(color='grey', linestyle='--')  
+        
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results_{var}_{window}', bbox_inches='tight', dpi = 500)
+        
+            
+    plt.tight_layout()
+    
+    if var == 'r$^2$':
+        var = 'r2'
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results2_{var}_{window}', dpi = 500)
 
     
 def plot_result_cmip6(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
@@ -309,7 +352,7 @@ def plot_result_cmip6(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 
     
     plt.tight_layout()
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/results_cmip6_{var}_{window}', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results_cmip6_{var}_{window}', dpi = 500)
     
    
     
@@ -356,7 +399,54 @@ def plot_timeseries(timeseries, data, lags, data_type, window = 21, ymin = -1.1,
     plt.tight_layout()
     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_{data_type}_window{window}', dpi = 500)
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_{data_type}_window{window}', dpi = 500)
+    
+    
+    
+def plot_timeseries_2(timeseries, data, lags, window = 21, ymin = -1.1, ymax = 2.1):
+    
+    wind_labels = ['NearestPointAverage', 'PressureDifference']
+    
+    n_row = len(lags)
+    n_col = 2
+    fsize = 15
+    
+    
+    fig, axs = plt.subplots(n_row, n_col, figsize = (12,2.5*n_row))
+    
+    
+    for i in range(n_row):
+        
+        for j in range(n_col):
+            
+            
+            ax = axs[i,j]
+            ax.set_ylim(ymin,ymax)
+            ax.plot(data.index, data[wind_labels[j]].values, color = 'k', label = 'Wind influence')
+            ax.axhline(color='grey', linestyle='--')  
+            
+            for name in AMV_names:
+                ts = timeseries[name, wind_labels[j], lags[i]]
+                ax.plot(ts.index, ts.values, label = name)
+                
+                
+            if j == 0 and i == 2:
+                ax.set_ylabel('Sea level change [cm]', fontsize=fsize)
+            if j==0 and i ==0:
+                ax.legend(loc='upper left')
+                
+            if i == 0:
+                ax.set_title(f'{wind_labels[j]}\nlag = {lags[i]} yr', fontsize=13) 
+            else:
+                ax.set_title(f'lag = {lags[i]} yr', fontsize=13) 
+                
+            if i == n_row-1:
+                ax.set_xlabel('Time [yr]', fontsize=fsize)
+    plt.tight_layout()
+    
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_2_window{window}', dpi = 500)
+    
     
     
     
@@ -409,7 +499,7 @@ def plot_timeseries_cmip6_onelag_allmodels(timeseries, lag = 0, window = 21, ymi
                     
                     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_allmodels_lag{lag}_window{window}', 
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_cmip6_allmodels_lag{lag}_window{window}', 
                 dpi = 500)
     
 
@@ -465,7 +555,7 @@ def plot_timeseries_cmip6_onelag_allmodels_originaldata(timeseries, original_dat
                     
                     
     
-    plt.savefig(f'/Users/iriskeizer/Projects/ClimatePhysics/Thesis/Figures/AMV/timeseries_cmip6_allmodels_originaldata_lag{lag}_window{window}',
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/timeseries_cmip6_allmodels_originaldata_lag{lag}_window{window}',
                 dpi = 500)
     
     
