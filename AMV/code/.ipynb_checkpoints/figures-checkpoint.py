@@ -279,7 +279,7 @@ def plot_result_2(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, 
         
         for k in labels_AMV:
             dataT = data[k].T
-            ax.scatter(dataT.index, dataT[var].values)
+            ax.scatter(dataT.index, dataT[var].values, s = 15)
         
         if i == 1:
             ax.set_xlabel('Lag [yr]', fontsize=fsize)
