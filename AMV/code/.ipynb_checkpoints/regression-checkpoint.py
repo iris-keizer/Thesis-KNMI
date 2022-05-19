@@ -78,7 +78,7 @@ def regression(data_x, data_y, lag):
 
 def lagged_regression(data_x, data_y):
     
-    lags = np.arange(-30, 31)
+    lags = np.arange(-10, 26)
     
     ts_lst1 = []
     r_lst1 = []

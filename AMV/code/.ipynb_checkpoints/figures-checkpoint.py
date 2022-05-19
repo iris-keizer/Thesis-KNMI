@@ -304,6 +304,147 @@ def plot_result_2(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, 
     
     plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results2_{var}_{window}', dpi = 500)
 
+def plot_result_3(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
+    '''
+    Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
+    
+    '''
+    labels_wind = ['NearestPointAverage', 'PressureDifference']
+    labels_AMV = ['HadISSTv2', 'COBE-SST2']
+    
+    fsize = 15
+    
+    fig, axs = plt.subplots(2, 1, figsize = (9,7))
+    
+    for i, l in enumerate(labels_wind):
+        
+        ax = axs[i]
+        
+        data = results.swaplevel(0,1, axis=1)[l]
+        
+        for k in labels_AMV:
+            dataT = data[k].T
+            ax.scatter(dataT.index, dataT[var].values, s = 15)
+        
+        if i == 1:
+            ax.set_xlabel('Lag [yr]', fontsize=fsize)
+        
+        ax.set_ylabel(ylabel, fontsize=fsize)
+        
+        ax.set_title(labels_wind[i], fontsize=fsize)
+        ax.set_ylim(ymin, ymax)
+        
+        if i == 0:
+            ax.legend(labels = labels_AMV, loc = location, fontsize = 14)   
+        
+        ax.axhline(color='grey', linestyle='--')  
+        
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results_{var}_{window}', bbox_inches='tight', dpi = 500)
+        
+            
+    plt.tight_layout()
+    
+    if var == 'r$^2$':
+        var = 'r2'
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results2_rw_{var}_{window}', dpi = 500)
+
+def plot_result_4(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
+    '''
+    Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
+    
+    '''
+    labels_wind = ['NearestPointAverage', 'PressureDifference']
+    labels_AMV = ['HadISSTv1.1', 'COBE-SST2']
+    
+    fsize = 15
+    
+    fig, axs = plt.subplots(2, 1, figsize = (9,7))
+    
+    for i, l in enumerate(labels_wind):
+        
+        ax = axs[i]
+        
+        data = results.swaplevel(0,1, axis=1)[l]
+        
+        for k in labels_AMV:
+            dataT = data[k].T
+            ax.scatter(dataT.index, dataT[var].values, s = 15)
+        
+        if i == 1:
+            ax.set_xlabel('Lag [yr]', fontsize=fsize)
+        
+        ax.set_ylabel(ylabel, fontsize=fsize)
+        
+        ax.set_title(labels_wind[i], fontsize=fsize)
+        ax.set_ylim(ymin, ymax)
+        
+        if i == 0:
+            ax.legend(labels = labels_AMV, loc = location, fontsize = 14)   
+        
+        ax.axhline(color='grey', linestyle='--')  
+        
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results_{var}_{window}', bbox_inches='tight', dpi = 500)
+        
+            
+    plt.tight_layout()
+    
+    if var == 'r$^2$':
+        var = 'r2'
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results2_{var}_{window}', dpi = 500)   
+    
+
+def plot_result_5(results, results2, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
+    '''
+    Function to plot a result of the regression between atmospheric contribution to sea-level and the AMV
+    
+    '''
+    labels_wind = ['NearestPointAverage', 'PressureDifference']
+    labels_AMV = ['HadISSTv2', 'COBE-SST2']
+    labels = ['AMV_andré - HadISSTv2', 'AMV_iris - HadISSTv2', 'AMV_andré - COBE-SST2', 'AMV_iris - COBE-SST2']
+    
+    fsize = 15
+    
+    fig, axs = plt.subplots(2, 1, figsize = (9,7))
+    
+    for i, l in enumerate(labels_wind):
+        
+        ax = axs[i]
+        
+        data = results.swaplevel(0,1, axis=1)[l]
+        data2 = results2.swaplevel(0,1, axis=1)[l]
+        
+        
+        for k in labels_AMV:
+            dataT = data[k].T
+            dataT2 = data2[k].T
+            ax.scatter(dataT.index, dataT[var].values, s = 20)
+            ax.scatter(dataT2.index, dataT2[var].values, s = 20)
+        
+        if i == 1:
+            ax.set_xlabel('Lag [yr]', fontsize=fsize)
+        
+        ax.set_ylabel(ylabel, fontsize=fsize)
+        
+        ax.set_title(labels_wind[i], fontsize=fsize)
+        ax.set_ylim(ymin, ymax)
+        
+        if i == 0:
+            ax.legend(labels = labels, loc = location, fontsize = 14)   
+        
+        ax.axhline(color='grey', linestyle='--')  
+        
+    
+            
+    plt.tight_layout()
+    
+    if var == 'r$^2$':
+        var = 'r2'
+    
+    plt.savefig(f'/Users/iriskeizer/Documents/Wind effect/Figures/AMV/results5_{var}_{window}', dpi = 500) 
+    
+    
     
 def plot_result_cmip6(results, var, ylabel, ymin = -0.01, ymax = 0.15, window = 21, location = 'upper right'):
     '''
@@ -406,6 +547,7 @@ def plot_timeseries(timeseries, data, lags, data_type, window = 21, ymin = -1.1,
 def plot_timeseries_2(timeseries, data, lags, window = 21, ymin = -1.1, ymax = 2.1):
     
     wind_labels = ['NearestPointAverage', 'PressureDifference']
+    AMV_names = ['HadISSTv1.1', 'COBE-SST2']
     
     n_row = len(lags)
     n_col = 2
